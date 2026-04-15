@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">&#x6821;&#x56ED;&#x5B9D;</string>
+    <string name="title_activity_main">&#x6821;&#x56ED;&#x5B9D;</string>
+    <string name="package_name">com.campus.pro</string>
+    <string name="custom_url_scheme">com.campus.pro</string>
+</resources>

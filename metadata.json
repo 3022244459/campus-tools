@@ -1,0 +1,7 @@
+{
+  "name": "校园宝 (Campus Pro)",
+  "description": "一站式校园生活服务平台，涵盖快递、外卖、报修、失物招领、社团资讯、校园导航等多种功能，为师生提供便捷的校园生活体验。",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

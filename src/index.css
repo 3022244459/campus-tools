@@ -1,0 +1,131 @@
+@font-face {
+  font-family: "Be Vietnam Pro";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/be-vietnam-pro-400.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Be Vietnam Pro";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/be-vietnam-pro-500.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Be Vietnam Pro";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/be-vietnam-pro-600.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Be Vietnam Pro";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/be-vietnam-pro-700.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/plus-jakarta-sans-400.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/plus-jakarta-sans-700.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./assets/fonts/plus-jakarta-sans-800.ttf") format("truetype");
+}
+
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+
+  --color-surface-dim: #ffca9c;
+  --color-outline-variant: #d8a272;
+  --color-background: #fff4ee;
+  --color-secondary-dim: #005674;
+  --color-surface: #fff4ee;
+  --color-tertiary-fixed: #feb2b9;
+  --color-tertiary: #854a51;
+  --color-primary-fixed: #fc7d00;
+  --color-tertiary-fixed-dim: #efa5ac;
+  --color-surface-container-low: #ffeee1;
+  --color-on-secondary-fixed: #00394e;
+  --color-on-secondary-fixed-variant: #005776;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-background: #482702;
+  --color-primary-dim: #803d00;
+  --color-on-primary-fixed: #000000;
+  --color-on-error: #ffefec;
+  --color-secondary-container: #99daff;
+  --color-on-error-container: #520c00;
+  --color-secondary-fixed: #99daff;
+  --color-on-surface: #482702;
+  --color-on-secondary-container: #004d69;
+  --color-tertiary-container: #feb2b9;
+  --color-inverse-surface: #1a0a00;
+  --color-surface-variant: #ffd5b2;
+  --color-inverse-primary: #fc7d00;
+  --color-on-primary-container: #3c1900;
+  --color-on-surface-variant: #7c5229;
+  --color-on-tertiary-fixed: #4c1c24;
+  --color-inverse-on-surface: #c69364;
+  --color-on-tertiary-fixed-variant: #6f393f;
+  --color-on-primary-fixed-variant: #4a2000;
+  --color-surface-container-high: #ffdcc0;
+  --color-surface-tint: #924600;
+  --color-surface-bright: #fff4ee;
+  --color-tertiary-dim: #773f46;
+  --color-on-secondary: #e7f5ff;
+  --color-primary: #924600;
+  --color-outline: #9b6d42;
+  --color-error-dim: #b92902;
+  --color-primary-fixed-dim: #e77300;
+  --color-on-primary: #fff0e8;
+  --color-on-tertiary: #ffefef;
+  --color-primary-container: #fc7d00;
+  --color-secondary: #006385;
+  --color-surface-container: #ffe3cd;
+  --color-surface-container-highest: #ffd5b2;
+  --color-on-tertiary-container: #653037;
+  --color-secondary-fixed-dim: #70ceff;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: #fff4ee;
+  color: #482702;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-headline);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
