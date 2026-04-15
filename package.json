@@ -1,7 +1,8 @@
 {
-  "name": "react-example",
+  "name": "campus-tools",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "可安装体验的校园工具 App 原型",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
@@ -10,7 +11,7 @@
     "cap:sync": "npx cap sync",
     "android": "npx cap open android",
     "preview": "vite preview",
-    "clean": "rm -rf dist",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
