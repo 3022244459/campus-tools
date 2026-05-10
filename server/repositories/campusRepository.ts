@@ -15,6 +15,7 @@ import type {
   CompareQuoteResponse,
   CourierAccountRecord,
   DatabaseShape,
+  DocumentDeliveryRecord,
   HomeBootstrap,
   LostFoundRecord,
   NavigationRecord,
@@ -48,11 +49,13 @@ export interface CampusRepository {
   rechargeWallet: (user: PublicUser, input: WalletRechargeInput) => WalletAccountRecord;
   withdrawWallet: (user: PublicUser, input: WalletDebitInput) => WalletAccountRecord;
   payWallet: (user: PublicUser, input: WalletDebitInput) => WalletAccountRecord;
+  rewardWallet: (user: PublicUser, input: WalletRechargeInput) => WalletAccountRecord;
   getUtilities: (user: PublicUser) => UtilityAccountRecord;
   rechargeWater: (user: PublicUser, input: WalletRechargeInput) => UtilityAccountRecord;
   payElectricity: (user: PublicUser, input: WalletRechargeInput) => UtilityAccountRecord;
   setElectricityReminder: (user: PublicUser, input: UtilityReminderInput) => UtilityAccountRecord;
   quoteCourier: (user: PublicUser, input: CompareInput) => CompareQuoteResponse;
+  getDocumentDelivery: (user: PublicUser) => DocumentDeliveryRecord;
 }
 
 export const campusRepository: CampusRepository = {
@@ -167,6 +170,22 @@ export const campusRepository: CampusRepository = {
     return db.walletAccounts[user.id];
   },
 
+  rewardWallet(user, input) {
+    const db = databaseRepository.update((draft) => {
+      adjustWalletBalance(draft, user, {
+        amount: input.amount,
+        title: '代送任务赏金',
+        auditType: 'wallet.reward',
+        auditVerb: '代送赏金到账',
+        iconKey: 'plus',
+        tone: 'green',
+        positive: true,
+      });
+    });
+
+    return db.walletAccounts[user.id];
+  },
+
   getUtilities(user) {
     return getUtilityAccount(databaseRepository.getSnapshot(), user);
   },
@@ -192,6 +211,15 @@ export const campusRepository: CampusRepository = {
 
   payElectricity(user, input) {
     const db = databaseRepository.update((draft) => {
+      adjustWalletBalance(draft, user, {
+        amount: input.amount,
+        title: '电费缴纳',
+        auditType: 'wallet.electricity.pay',
+        auditVerb: '电费缴纳',
+        iconKey: 'shopping',
+        tone: 'purple',
+        positive: false,
+      });
       const account = getUtilityAccount(draft, user);
       account.electricityKwh = Number((account.electricityKwh + input.amount).toFixed(2));
       account.electricityTransactions = [
@@ -225,6 +253,10 @@ export const campusRepository: CampusRepository = {
       appendAuditLog(draft, 'courier.compare', user, `${user.username} 查询快递比价 ${input.destination} ${input.weight}kg`);
     });
     return result;
+  },
+
+  getDocumentDelivery() {
+    return buildDocumentDelivery(databaseRepository.getSnapshot());
   },
 };
 
@@ -297,6 +329,35 @@ function adjustWalletBalance(
   account.transactions = [transaction, ...account.transactions].slice(0, 20);
 
   appendAuditLog(db, options.auditType, user, `${user.username} ${options.auditVerb} ${options.amount.toFixed(2)} 元`);
+}
+
+function buildDocumentDelivery(db: DatabaseShape): DocumentDeliveryRecord {
+  const tasks = Object.entries(db.teacherDocumentByUserId)
+    .map(([
+      teacherId,
+      document,
+    ]): DocumentDeliveryRecord['tasks'][number] | null => {
+      const teacher = db.users.find((item) => item.id === teacherId);
+      const order = document.activeOrder;
+      if (!order?.orderCode) {
+        return null;
+      }
+
+      return {
+        id: `${teacherId}-${order.orderCode}`,
+        teacherName: teacher?.name ?? '教师用户',
+        title: order.title || '文件代送',
+        pickupLabel: order.pickupLabel,
+        destinationLabel: order.destinationLabel,
+        urgency: order.urgency,
+        reward: order.urgency === '加急' ? '¥6.00' : order.urgency === '定时' ? '¥5.00' : '¥4.00',
+        etaText: order.etaText || '预计 15 分钟内送达',
+        status: 'open' as const,
+      };
+    })
+    .filter((item): item is DocumentDeliveryRecord['tasks'][number] => Boolean(item));
+
+  return {tasks};
 }
 
 function appendAuditLog(db: DatabaseShape, type: string, actor: PublicUser, detail: string): void {

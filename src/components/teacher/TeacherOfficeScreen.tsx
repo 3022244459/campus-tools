@@ -1,12 +1,49 @@
 import React from 'react';
 import {BookOpen, Calendar, ChevronRight, FileText, Music, Package, Plus, TrendingUp, Users} from 'lucide-react';
-import {fetchTeacherOffice} from '../../lib/api';
+import {
+  fetchTeacherLeave,
+  fetchTeacherOffice,
+  fetchTeacherStudentAffairs,
+  reviewTeacherLeaveApplication,
+  reviewTeacherStudentAffairApplication,
+} from '../../lib/api';
 import {emptyTeacherOfficeData} from '../../lib/emptyData';
 import {useRemoteData} from '../../lib/useRemoteData';
 import type {AuthSession, TeacherOfficeData, TeacherTool} from '../../lib/types';
 
 export const TeacherOfficeScreen: React.FC<{ onNavigate: (screen: string) => void; session: AuthSession }> = ({ onNavigate, session }) => {
   const {data, loading, error, source} = useRemoteData<TeacherOfficeData>(session, emptyTeacherOfficeData, fetchTeacherOffice);
+  const [approvals, setApprovals] = React.useState(data.approvals);
+  const [message, setMessage] = React.useState('');
+  const [panel, setPanel] = React.useState<'schedule' | 'supplies' | null>(null);
+
+  React.useEffect(() => {
+    setApprovals(data.approvals);
+  }, [data.approvals]);
+
+  async function handleOfficeApproval(approvalId: string, decision: 'approve' | 'reject') {
+    setMessage('');
+    try {
+      if (approvalId === 'approval-1') {
+        const leave = await fetchTeacherLeave(session);
+        const application = leave.data.applications[0];
+        if (application) {
+          await reviewTeacherLeaveApplication(session, application.id, decision, leave.data);
+        }
+      } else if (approvalId === 'approval-2') {
+        const affairs = await fetchTeacherStudentAffairs(session);
+        const application = affairs.data.applications[0];
+        if (application) {
+          await reviewTeacherStudentAffairApplication(session, application.id, decision, affairs.data);
+        }
+      }
+
+      setApprovals((current) => current.filter((item) => item.id !== approvalId));
+      setMessage(decision === 'approve' ? '审批已通过，待办卡片已移除。' : '审批已驳回，待办卡片已移除。');
+    } catch (caught) {
+      setMessage(caught instanceof Error ? caught.message : '审批处理失败，请稍后重试。');
+    }
+  }
 
   return (
     <div className="space-y-8 pt-4 pb-20">
@@ -25,6 +62,11 @@ export const TeacherOfficeScreen: React.FC<{ onNavigate: (screen: string) => voi
       </section>
 
       <StatusNote loading={loading} error={error} source={source} />
+      {message ? (
+        <section className="rounded-lg bg-primary-container/15 px-4 py-3 text-sm font-bold text-primary">
+          {message}
+        </section>
+      ) : null}
 
       <section>
         <div className="flex justify-between items-end mb-4">
@@ -38,7 +80,7 @@ export const TeacherOfficeScreen: React.FC<{ onNavigate: (screen: string) => voi
           </button>
         </div>
         <div className="grid grid-cols-1 gap-4">
-          {data.approvals.map((approval) => (
+          {approvals.map((approval) => (
             <div key={approval.id} className={`p-5 flex flex-col justify-between h-40 relative overflow-hidden shadow-sm border rounded-lg ${approval.tone === 'primary' ? 'bg-surface-container-low border-outline-variant/5' : 'bg-secondary-container border-outline-variant/5'}`}>
               <div className="z-10">
                 <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold mb-2 ${approval.tone === 'primary' ? 'bg-primary-container text-black' : 'bg-secondary text-white'}`}>{approval.badge}</span>
@@ -49,14 +91,14 @@ export const TeacherOfficeScreen: React.FC<{ onNavigate: (screen: string) => voi
                 <button
                   className={`px-4 py-2 rounded-full text-sm font-bold shadow-sm active:scale-95 transition-transform ${approval.tone === 'primary' ? 'bg-primary text-on-primary' : 'bg-on-secondary-container text-white'}`}
                   type="button"
-                  onClick={() => window.alert(`${approval.title} 已处理。`)}
+                  onClick={() => void handleOfficeApproval(approval.id, 'approve')}
                 >
                   {approval.primaryAction}
                 </button>
                 <button
                   className={`px-4 py-2 rounded-full text-sm font-bold active:scale-95 transition-transform ${approval.tone === 'primary' ? 'bg-surface-container-highest text-on-surface' : 'bg-white/40 text-on-secondary-container'}`}
                   type="button"
-                  onClick={() => approval.secondaryAction === '详情' ? onNavigate('teacher-leave') : window.alert(`${approval.title} 已驳回。`)}
+                  onClick={() => approval.secondaryAction === '详情' ? onNavigate('teacher-leave') : void handleOfficeApproval(approval.id, 'reject')}
                 >
                   {approval.secondaryAction}
                 </button>
@@ -66,6 +108,11 @@ export const TeacherOfficeScreen: React.FC<{ onNavigate: (screen: string) => voi
               </div>
             </div>
           ))}
+          {!approvals.length ? (
+            <div className="rounded-lg bg-surface-container-lowest p-5 text-sm font-bold text-on-surface-variant shadow-sm">
+              当前没有待办审批。
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -115,11 +162,49 @@ export const TeacherOfficeScreen: React.FC<{ onNavigate: (screen: string) => voi
               icon={renderToolIcon(tool)}
               title={tool.title}
               desc={tool.description}
-              onClick={() => tool.route ? onNavigate(tool.route) : window.alert(`${tool.title} 已打开。`)}
+              onClick={() => {
+                if (tool.route) {
+                  onNavigate(tool.route);
+                  return;
+                }
+                setPanel(tool.id === 'tool-schedule' ? 'schedule' : 'supplies');
+              }}
             />
           ))}
         </div>
       </section>
+
+      {panel === 'schedule' ? (
+        <section className="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-black text-on-surface">我的课表</h3>
+            <span className="text-xs font-bold text-primary">本周课程</span>
+          </div>
+          {[
+            ['周一 08:30', '数据结构', '北洋园校区 第26教学楼 B206'],
+            ['周三 14:00', '人工智能导论', '卫津路校区 第9教学楼 301'],
+            ['周五 10:20', '课程设计答辩', '北洋园校区 智算学部报告厅'],
+          ].map(([time, title, place]) => (
+            <div key={`${time}-${title}`} className="rounded-lg bg-surface-container-low p-4">
+              <p className="text-xs font-bold text-primary">{time}</p>
+              <p className="mt-1 text-base font-black text-on-surface">{title}</p>
+              <p className="text-xs font-medium text-on-surface-variant">{place}</p>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {panel === 'supplies' ? (
+        <section className="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-3">
+          <h3 className="text-lg font-black text-on-surface">耗材领用</h3>
+          {['A4 打印纸 2 包', '白板笔 4 支', '档案袋 20 个'].map((item) => (
+            <button key={item} className="flex w-full items-center justify-between rounded-lg bg-surface-container-low px-4 py-3 text-left text-sm font-bold active:scale-[0.99]" type="button" onClick={() => setMessage(`${item} 领用申请已提交。`)}>
+              {item}
+              <ChevronRight className="h-4 w-4 text-on-surface-variant" />
+            </button>
+          ))}
+        </section>
+      ) : null}
 
       <section className="pb-10">
         <div className="bg-secondary-fixed-dim rounded-lg p-6 relative overflow-hidden flex items-center shadow-lg border border-secondary-fixed-dim/30">

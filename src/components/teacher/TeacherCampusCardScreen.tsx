@@ -1,13 +1,71 @@
 import React from 'react';
 import {ArrowRight, ParkingCircle, PlusCircle, QrCode, School, ShoppingBag, Utensils, Wallet, Wifi} from 'lucide-react';
-import {fetchTeacherCampusCard} from '../../lib/api';
+import {fetchTeacherCampusCard, fetchWallet, payWallet, rechargeWallet} from '../../lib/api';
 import {emptyTeacherCampusCardData} from '../../lib/emptyData';
 import {useRemoteData} from '../../lib/useRemoteData';
-import type {AuthSession, CampusCardTransaction, TeacherCampusCardData} from '../../lib/types';
+import type {AuthSession, CampusCardTransaction, TeacherCampusCardData, WalletData} from '../../lib/types';
 
 export const TeacherCampusCardScreen: React.FC<{ session: AuthSession }> = ({session}) => {
   const {data, loading, error, source} = useRemoteData<TeacherCampusCardData>(session, emptyTeacherCampusCardData, fetchTeacherCampusCard);
+  const [walletData, setWalletData] = React.useState<WalletData | null>(null);
   const [message, setMessage] = React.useState('');
+  const [activePanel, setActivePanel] = React.useState<'recharge' | 'pay' | null>(null);
+  const [amount, setAmount] = React.useState('50');
+  const [pending, setPending] = React.useState(false);
+
+  React.useEffect(() => {
+    let active = true;
+    fetchWallet(session)
+      .then((result) => {
+        if (active) {
+          setWalletData(result.data);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [session]);
+
+  async function handleRecharge() {
+    const parsed = Number(amount);
+    if (!walletData || !Number.isFinite(parsed) || parsed <= 0) {
+      setMessage('请输入正确的充值金额。');
+      return;
+    }
+
+    setPending(true);
+    setMessage('');
+    try {
+      const result = await rechargeWallet(session, Number(parsed.toFixed(2)), walletData);
+      setWalletData(result.data);
+      setMessage(`充值成功，当前余额 ${result.data.walletBalanceLabel}。`);
+    } catch (caught) {
+      setMessage(caught instanceof Error ? caught.message : '充值失败，请稍后重试。');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handlePay() {
+    if (!walletData) {
+      return;
+    }
+
+    setPending(true);
+    setMessage('');
+    try {
+      const result = await payWallet(session, 12.8, walletData);
+      setWalletData(result.data);
+      setMessage(`付款成功，当前余额 ${result.data.walletBalanceLabel}。`);
+    } catch (caught) {
+      setMessage(caught instanceof Error ? caught.message : '付款失败，请稍后重试。');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const balanceLabel = walletData?.walletBalanceLabel ?? data.balance;
 
   return (
     <div className="space-y-8 pt-4 pb-20">
@@ -29,10 +87,10 @@ export const TeacherCampusCardScreen: React.FC<{ session: AuthSession }> = ({ses
             <div className="flex justify-between items-end">
               <div>
                 <p className="text-white/70 text-sm mb-1">卡余额 (CNY)</p>
-                <p className="text-white font-headline font-black text-5xl tracking-tight">{data.balance}</p>
+                <p className="text-white font-headline font-black text-5xl tracking-tight">{balanceLabel}</p>
               </div>
               <div className="text-right">
-                <p className="text-white/90 font-bold text-lg">{data.ownerName}</p>
+                <p className="text-white/90 font-bold text-lg">{session.user.name}</p>
                 <p className="text-white/60 text-xs font-mono">ID: {data.maskedId}</p>
               </div>
             </div>
@@ -49,7 +107,7 @@ export const TeacherCampusCardScreen: React.FC<{ session: AuthSession }> = ({ses
         <button
           className="flex flex-col items-center justify-center bg-secondary-container/80 backdrop-blur-md p-6 rounded-lg hover:bg-secondary-container transition-colors active:scale-95 border-b-4 border-secondary-dim/20 shadow-sm"
           type="button"
-          onClick={() => setMessage('校园卡充值成功，余额已更新。')}
+          onClick={() => setActivePanel('recharge')}
         >
           <PlusCircle className="text-secondary w-10 h-10 mb-2 fill-secondary/20" />
           <span className="font-bold text-on-secondary-container">余额充值</span>
@@ -57,12 +115,46 @@ export const TeacherCampusCardScreen: React.FC<{ session: AuthSession }> = ({ses
         <button
           className="flex flex-col items-center justify-center bg-surface-container-highest p-6 rounded-lg hover:bg-surface-container-high transition-colors active:scale-95 border-b-4 border-primary/10 shadow-sm"
           type="button"
-          onClick={() => setMessage('付款码已打开，可用于食堂和停车场。')}
+          onClick={() => setActivePanel('pay')}
         >
           <QrCode className="text-primary w-10 h-10 mb-2" />
           <span className="font-bold text-on-primary-container">付款码</span>
         </button>
       </section>
+
+      {activePanel === 'recharge' ? (
+        <section className="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-black text-on-surface">余额充值</h3>
+            <span className="text-xs font-bold text-on-surface-variant">当前余额 {balanceLabel}</span>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {[50, 100, 200, 500].map((item) => (
+              <button key={item} className={`rounded-full px-3 py-2 text-sm font-bold active:scale-95 ${amount === String(item) ? 'bg-primary-fixed text-white' : 'bg-surface-container-low text-on-surface'}`} type="button" onClick={() => setAmount(String(item))}>
+                ¥{item}
+              </button>
+            ))}
+          </div>
+          <input className="w-full rounded-xl bg-surface-container-low px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary" value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="输入金额" />
+          <button className="w-full rounded-xl bg-primary-fixed py-4 text-sm font-black text-on-primary-fixed active:scale-95 disabled:opacity-60" type="button" onClick={() => void handleRecharge()} disabled={pending}>
+            {pending ? '处理中...' : '确认充值'}
+          </button>
+        </section>
+      ) : null}
+
+      {activePanel === 'pay' ? (
+        <section className="rounded-xl bg-surface-container-lowest p-6 text-center shadow-sm space-y-4">
+          <div className="mx-auto grid h-36 w-36 grid-cols-5 gap-1 rounded-xl bg-white p-4 shadow-inner">
+            {Array.from({length: 25}).map((_, index) => (
+              <span key={index} className={`${index % 2 === 0 || index % 7 === 0 ? 'bg-on-surface' : 'bg-white'} rounded-sm`} />
+            ))}
+          </div>
+          <p className="text-sm font-bold text-on-surface">教师付款码 0829 2602 2026</p>
+          <button className="rounded-full bg-secondary px-5 py-2 text-sm font-bold text-on-secondary active:scale-95 disabled:opacity-60" type="button" onClick={() => void handlePay()} disabled={pending}>
+            {pending ? '处理中...' : '确认付款 ¥12.80'}
+          </button>
+        </section>
+      ) : null}
 
       <section className="mt-10 bg-secondary-fixed-dim/20 rounded-lg p-6 relative overflow-hidden border border-secondary-fixed-dim/30">
         <div className="absolute -right-10 -bottom-10 opacity-10">

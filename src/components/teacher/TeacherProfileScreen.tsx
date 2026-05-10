@@ -87,7 +87,7 @@ export const TeacherProfileScreen: React.FC<TeacherProfileProps> = ({
 
       <div className="space-y-3">
         <h3 className="px-2 text-sm font-bold uppercase tracking-widest text-on-surface-variant">账户设置</h3>
-        <ProfileMenuItem icon={<CreditCard className="h-6 w-6 text-primary" />} label="校园卡与余额" subLabel={wallet.walletBalanceLabel} onClick={() => onNavigate('wallet')} />
+        <ProfileMenuItem icon={<CreditCard className="h-6 w-6 text-primary" />} label="校园卡与余额" subLabel={wallet.walletBalanceLabel} onClick={() => onNavigate('teacher-campus-card')} />
         <ProfileMenuItem icon={<Package className="h-6 w-6 text-secondary" />} label="快递与包裹" subLabel={`${courier.pendingCount} 件待处理`} onClick={() => onNavigate('courier')} />
         <ProfileMenuItem icon={<ShieldCheck className="h-6 w-6 text-tertiary" />} label="账号与安全" subLabel={user.verified ? '已实名验证' : '待实名验证'} />
         <ProfileMenuItem icon={<Settings className="h-6 w-6 text-primary" />} label="系统通用设置" subLabel="通知、隐私与偏好" />

@@ -107,6 +107,15 @@ export function payWalletController(req: AuthenticatedRequest, res: Response, ne
   }
 }
 
+export function rewardWalletController(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const input = parseWalletRechargeInput(req.body);
+    res.json(campusRepository.rewardWallet(req.user!, input));
+  } catch (error) {
+    next(error);
+  }
+}
+
 export function utilitiesController(req: AuthenticatedRequest, res: Response) {
   res.json(campusRepository.getUtilities(req.user!));
 }
@@ -145,4 +154,8 @@ export function compareQuoteController(req: AuthenticatedRequest, res: Response,
   } catch (error) {
     next(error);
   }
+}
+
+export function documentDeliveryController(req: AuthenticatedRequest, res: Response) {
+  res.json(campusRepository.getDocumentDelivery(req.user!));
 }

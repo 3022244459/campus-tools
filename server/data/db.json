@@ -14,7 +14,7 @@
       "verified": true,
       "avatarUrl": "./images/remote-21-b20d58e37d.png",
       "stats": {
-        "orders": 12,
+        "orders": 13,
         "repairs": 2,
         "posts": 5
       }
@@ -60,10 +60,10 @@
   ],
   "sessions": [
     {
-      "token": "sha256$416071392f63fc65e9ca4519485c2ccfcc98616042ae3c379852ac21d08d6104",
+      "token": "sha256$078d12c5fe2c83342479b53ed26891c6f7114719ae9d05ec9969a6c3c37038a0",
       "userId": "stu-001",
-      "createdAt": "2026-05-10T02:40:28.916Z",
-      "expiresAt": "2026-05-17T02:40:28.916Z"
+      "createdAt": "2026-05-10T11:56:01.918Z",
+      "expiresAt": "2026-05-17T11:56:01.918Z"
     }
   ],
   "announcements": [
@@ -151,10 +151,28 @@
   },
   "walletAccounts": {
     "stu-001": {
-      "totalBalance": 88.5,
-      "dailyChange": 12.4,
-      "walletBalanceLabel": "¥88.50",
+      "totalBalance": 144.5,
+      "dailyChange": 68.4,
+      "walletBalanceLabel": "¥144.50",
       "transactions": [
+        {
+          "id": "txn-mozpnkhf-c3260d86",
+          "title": "代送任务赏金",
+          "time": "刚刚",
+          "amount": "+6.00",
+          "iconKey": "plus",
+          "tone": "green",
+          "positive": true
+        },
+        {
+          "id": "txn-mozn6mss-eb0c4096",
+          "title": "校园卡充值",
+          "time": "刚刚",
+          "amount": "+50.00",
+          "iconKey": "plus",
+          "tone": "green",
+          "positive": true
+        },
         {
           "id": "txn-001",
           "title": "二食堂 - 兰州拉面",
@@ -217,10 +235,34 @@
   },
   "utilityAccounts": {
     "stu-001": {
-      "waterBalance": 42.5,
-      "electricityKwh": 36.5,
+      "waterBalance": 92.5,
+      "electricityKwh": 96.5,
       "reminderEnabled": true,
       "waterTransactions": [
+        {
+          "id": "water-mozn80w0-4004b650",
+          "title": "热水充值",
+          "time": "刚刚",
+          "amount": "+20.00"
+        },
+        {
+          "id": "water-mozn7pb0-48d57c1c",
+          "title": "热水充值",
+          "time": "刚刚",
+          "amount": "+10.00"
+        },
+        {
+          "id": "water-mozn7h0l-656c53ce",
+          "title": "热水充值",
+          "time": "刚刚",
+          "amount": "+10.00"
+        },
+        {
+          "id": "water-mozn7byy-f2d395e2",
+          "title": "热水充值",
+          "time": "刚刚",
+          "amount": "+10.00"
+        },
         {
           "id": "water-001",
           "title": "1号宿舍楼 302室",
@@ -235,6 +277,18 @@
         }
       ],
       "electricityTransactions": [
+        {
+          "id": "electricity-mozn949l-8320ce1d",
+          "title": "电费缴纳",
+          "time": "刚刚",
+          "amount": "+30.00 度"
+        },
+        {
+          "id": "electricity-mozn8v8v-a05d10a4",
+          "title": "电费缴纳",
+          "time": "刚刚",
+          "amount": "+30.00 度"
+        },
         {
           "id": "electricity-001",
           "title": "电费缴纳",
@@ -315,13 +369,23 @@
     "student": {
       "heroTitle": "全校代取 极速送达",
       "heroDescription": "校内同学接单，安全又快捷。",
-      "nearbyOrders": 13,
+      "nearbyOrders": 14,
       "orders": [
+        {
+          "id": "takeout-moznhdwp-cfb2f3f5",
+          "title": "炒饭",
+          "destination": "送到 图书馆南门",
+          "reward": "¥4.5",
+          "tags": [
+            "尽快"
+          ],
+          "icon": "beef"
+        },
         {
           "id": "takeout-moy8bsqu-8250642d",
           "title": "奶茶代取",
           "destination": "送到 图书馆南门",
-          "reward": "楼4.5",
+          "reward": "¥4.5",
           "tags": [
             "少冰",
             "尽快"
@@ -547,7 +611,7 @@
           "id": "my-takeout-001",
           "title": "南区奶茶代取",
           "destination": "送到 12 号宿舍楼 A 区",
-          "reward": "楼4.5",
+          "reward": "¥4.5",
           "tags": [
             "少冰",
             "尽快"
@@ -561,7 +625,7 @@
           "id": "my-takeout-002",
           "title": "一食堂午饭代取",
           "destination": "送到 图书馆南门",
-          "reward": "楼5.0",
+          "reward": "¥5.0",
           "tags": [
             "盖饭",
             "已接单"
@@ -575,7 +639,7 @@
           "id": "my-takeout-003",
           "title": "便利店早餐代取",
           "destination": "送到 3 号宿舍楼",
-          "reward": "楼3.0",
+          "reward": "¥3.0",
           "tags": [
             "面包",
             "完成"
@@ -641,7 +705,7 @@
           "id": "tea-takeout-001",
           "title": "教工食堂午餐代取",
           "destination": "送到 行政楼 3 楼教研室",
-          "reward": "楼4.0",
+          "reward": "¥4.0",
           "tags": [
             "工作餐",
             "进行中"
@@ -655,7 +719,7 @@
           "id": "tea-takeout-002",
           "title": "咖啡代取",
           "destination": "送到 办公楼 B201",
-          "reward": "楼3.5",
+          "reward": "¥3.5",
           "tags": [
             "热美式",
             "完成"
@@ -986,8 +1050,8 @@
   "teacherCampusCardByUserId": {
     "tea-001": {
       "cardTitle": "教师电子卡",
-      "balance": "¥864.50",
-      "ownerName": "王晓云 教授",
+      "balance": "¥260.20",
+      "ownerName": "李老师",
       "maskedId": "**** 8829",
       "notification": "北洋园校区 B 区停车场于周五进行路面维护，请老师们移步 A 区停放。",
       "transactions": [
@@ -996,7 +1060,7 @@
           "title": "第一教工食堂",
           "time": "今天 12:15 · 午餐",
           "amount": "-18.50",
-          "balance": "864.50",
+          "balance": "260.20",
           "icon": "utensils",
           "tone": "secondary"
         },
@@ -1098,7 +1162,7 @@
     "tea-001": {
       "heroTitle": "请假审批",
       "heroDescription": "高效处理学生请假申请，维护校园出勤秩序。",
-      "pendingCount": 3,
+      "pendingCount": 2,
       "applications": [
         {
           "id": "leave-1",
@@ -1197,15 +1261,15 @@
     "tea-001": {
       "heroTitle": "猫头鹰小使者 为您效劳",
       "heroDescription": "校园文件代送，准时安全送达。",
-      "activeDeliveries": 1,
+      "activeDeliveries": 2,
       "activeOrder": {
-        "title": "期末考卷分发",
-        "orderCode": "WL20230824",
+        "title": "试卷",
+        "orderCode": "WLLSACD614",
         "urgency": "加急",
         "pickupLabel": "行政楼",
-        "destinationLabel": "教学楼 F",
-        "progress": 66,
-        "etaText": "预计 10 分钟后送达"
+        "destinationLabel": "46教",
+        "progress": 15,
+        "etaText": "已提交，预计 10 分钟内接单"
       },
       "form": {
         "pickupPlaceholder": "例如：行政楼 302",
@@ -1224,6 +1288,174 @@
     }
   },
   "auditLogs": [
+    {
+      "id": "audit-mozpvhmm-5e868d92",
+      "type": "auth.login",
+      "actorId": "stu-001",
+      "detail": "student001 登录成功",
+      "createdAt": "2026-05-10T11:56:01.918Z"
+    },
+    {
+      "id": "audit-mozps0qy-e8b05d6a",
+      "type": "auth.logout",
+      "actorId": "adm-001",
+      "detail": "admin001 退出登录",
+      "createdAt": "2026-05-10T11:53:20.074Z"
+    },
+    {
+      "id": "audit-mozprafv-4d513792",
+      "type": "auth.login",
+      "actorId": "adm-001",
+      "detail": "admin001 登录成功",
+      "createdAt": "2026-05-10T11:52:45.979Z"
+    },
+    {
+      "id": "audit-mozpr16d-d22cd97a",
+      "type": "auth.logout",
+      "actorId": "stu-001",
+      "detail": "student001 退出登录",
+      "createdAt": "2026-05-10T11:52:33.974Z"
+    },
+    {
+      "id": "audit-mozpnkhf-cd761770",
+      "type": "wallet.reward",
+      "actorId": "stu-001",
+      "detail": "student001 代送赏金到账 6.00 元",
+      "createdAt": "2026-05-10T11:49:52.371Z"
+    },
+    {
+      "id": "audit-mozpm2ra-48f01f2c",
+      "type": "auth.login",
+      "actorId": "stu-001",
+      "detail": "student001 登录成功",
+      "createdAt": "2026-05-10T11:48:42.742Z"
+    },
+    {
+      "id": "audit-mozplzgg-620c6019",
+      "type": "auth.logout",
+      "actorId": "tea-001",
+      "detail": "teacher001 退出登录",
+      "createdAt": "2026-05-10T11:48:38.465Z"
+    },
+    {
+      "id": "audit-mozplsac-a4bb687a",
+      "type": "teacher.document.submit",
+      "actorId": "tea-001",
+      "detail": "teacher001 提交文件代送 行政楼 -> 46教",
+      "createdAt": "2026-05-10T11:48:29.172Z"
+    },
+    {
+      "id": "audit-mozpcy4q-dfc8e4c6",
+      "type": "teacher.leave.approve",
+      "actorId": "tea-001",
+      "detail": "teacher001 批准 请假申请 leave-1",
+      "createdAt": "2026-05-10T11:41:36.842Z"
+    },
+    {
+      "id": "audit-mozp8u40-79c3f1eb",
+      "type": "auth.login",
+      "actorId": "stu-001",
+      "detail": "student001 登录成功",
+      "createdAt": "2026-05-10T11:38:25.008Z"
+    },
+    {
+      "id": "audit-mozp6m2n-1f11f512",
+      "type": "teacher.student-affairs.approve",
+      "actorId": "tea-001",
+      "detail": "teacher001 批准 学生事务申请 affair-1",
+      "createdAt": "2026-05-10T11:36:41.279Z"
+    },
+    {
+      "id": "audit-mozp6d3r-a3494f4e",
+      "type": "auth.login",
+      "actorId": "tea-001",
+      "detail": "teacher001 登录成功",
+      "createdAt": "2026-05-10T11:36:29.655Z"
+    },
+    {
+      "id": "audit-mozp69ud-d577db37",
+      "type": "auth.logout",
+      "actorId": "stu-001",
+      "detail": "student001 退出登录",
+      "createdAt": "2026-05-10T11:36:25.431Z"
+    },
+    {
+      "id": "audit-moznhdwp-71c5d993",
+      "type": "student.takeout.submit",
+      "actorId": "stu-001",
+      "detail": "student001 发布代取订单 炒饭",
+      "createdAt": "2026-05-10T10:49:04.681Z"
+    },
+    {
+      "id": "audit-mozn949m-3693009b",
+      "type": "utility.electricity.pay",
+      "actorId": "stu-001",
+      "detail": "student001 电费缴纳 30.00 度",
+      "createdAt": "2026-05-10T10:42:38.938Z"
+    },
+    {
+      "id": "audit-mozn8v8v-9a41dfcb",
+      "type": "utility.electricity.pay",
+      "actorId": "stu-001",
+      "detail": "student001 电费缴纳 30.00 度",
+      "createdAt": "2026-05-10T10:42:27.247Z"
+    },
+    {
+      "id": "audit-mozn8nfl-e81b4507",
+      "type": "utility.electricity.reminder",
+      "actorId": "stu-001",
+      "detail": "student001 开启低电量提醒",
+      "createdAt": "2026-05-10T10:42:17.121Z"
+    },
+    {
+      "id": "audit-mozn8k8j-7df5ead9",
+      "type": "utility.electricity.reminder",
+      "actorId": "stu-001",
+      "detail": "student001 关闭低电量提醒",
+      "createdAt": "2026-05-10T10:42:12.979Z"
+    },
+    {
+      "id": "audit-mozn80w0-e17a9231",
+      "type": "utility.water.recharge",
+      "actorId": "stu-001",
+      "detail": "student001 热水充值 20.00 元",
+      "createdAt": "2026-05-10T10:41:47.904Z"
+    },
+    {
+      "id": "audit-mozn7pb0-86d535f0",
+      "type": "utility.water.recharge",
+      "actorId": "stu-001",
+      "detail": "student001 热水充值 10.00 元",
+      "createdAt": "2026-05-10T10:41:32.893Z"
+    },
+    {
+      "id": "audit-mozn7h0l-98756064",
+      "type": "utility.water.recharge",
+      "actorId": "stu-001",
+      "detail": "student001 热水充值 10.00 元",
+      "createdAt": "2026-05-10T10:41:22.149Z"
+    },
+    {
+      "id": "audit-mozn7byy-7aae939f",
+      "type": "utility.water.recharge",
+      "actorId": "stu-001",
+      "detail": "student001 热水充值 10.00 元",
+      "createdAt": "2026-05-10T10:41:15.610Z"
+    },
+    {
+      "id": "audit-mozn6mss-8240900a",
+      "type": "wallet.recharge",
+      "actorId": "stu-001",
+      "detail": "student001 充值 50.00 元",
+      "createdAt": "2026-05-10T10:40:42.988Z"
+    },
+    {
+      "id": "audit-mozmy686-5e6d4556",
+      "type": "auth.login",
+      "actorId": "stu-001",
+      "detail": "student001 登录成功",
+      "createdAt": "2026-05-10T10:34:08.262Z"
+    },
     {
       "id": "audit-moz611pw-6687ef2f",
       "type": "auth.login",

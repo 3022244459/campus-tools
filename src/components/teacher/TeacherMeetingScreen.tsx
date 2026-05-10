@@ -17,6 +17,8 @@ export const TeacherMeetingScreen: React.FC<TeacherMeetingScreenProps> = ({sessi
   );
   const [activeDay, setActiveDay] = React.useState('');
   const [message, setMessage] = React.useState('');
+  const [reservedRoomIds, setReservedRoomIds] = React.useState<string[]>([]);
+  const [reservation, setReservation] = React.useState<{room: string; date: string; slot: string} | null>(null);
 
   React.useEffect(() => {
     const nextDay = data.calendarDays.find((item) => item.active)?.date ?? data.calendarDays[0]?.date ?? '';
@@ -79,12 +81,26 @@ export const TeacherMeetingScreen: React.FC<TeacherMeetingScreenProps> = ({sessi
           {data.rooms.map((room) => (
             <RoomCard
               key={room.id}
-              room={room}
-              onReserve={() => setMessage(`${room.title} 已预约 ${activeDay ? `${data.monthLabel} ${activeDay} 日` : '今天'} ${data.activeSlot}。`)}
+              room={reservedRoomIds.includes(room.id) ? {...room, status: 'busy'} : room}
+              onReserve={() => {
+                const dateLabel = activeDay ? `${data.monthLabel} ${activeDay} 日` : '今天';
+                setReservedRoomIds((current) => [...new Set([...current, room.id])]);
+                setReservation({room: room.title, date: dateLabel, slot: data.activeSlot});
+                setMessage(`${room.title} 已预约 ${dateLabel} ${data.activeSlot}。`);
+              }}
             />
           ))}
         </div>
       </section>
+
+      {reservation ? (
+        <section className="rounded-xl bg-primary-container/15 p-5 shadow-sm space-y-2">
+          <p className="text-xs font-black text-primary uppercase tracking-widest">预约结果</p>
+          <h3 className="text-lg font-black text-on-surface">{reservation.room}</h3>
+          <p className="text-sm font-bold text-on-surface-variant">{reservation.date} · {reservation.slot}</p>
+          <p className="text-xs font-medium text-on-surface-variant">已生成会议室预约记录，可在当天会议室列表中继续查看。</p>
+        </section>
+      ) : null}
 
       <section className="bg-secondary-fixed-dim p-6 rounded-lg relative overflow-hidden shadow-sm">
         <div className="relative z-10 flex items-center justify-between">

@@ -9,6 +9,7 @@ interface CourierScreenProps {
 export const CourierScreen: React.FC<CourierScreenProps> = ({data}) => {
   const [panel, setPanel] = React.useState<'proxy' | 'history' | 'pickup' | null>(null);
   const [message, setMessage] = React.useState('');
+  const [proxyStep, setProxyStep] = React.useState<'draft' | 'sent' | 'accepted' | 'delivering' | 'delivered'>('draft');
 
   function handlePickup(code?: string) {
     setPanel('pickup');
@@ -56,7 +57,7 @@ export const CourierScreen: React.FC<CourierScreenProps> = ({data}) => {
           type="button"
           onClick={() => {
             setPanel('proxy');
-            setMessage('代领取申请已生成，可把取件码发给同学代取。');
+            setMessage('代领取申请已生成，提交后等待同学接单。');
           }}
         >
           <div className="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary">
@@ -86,12 +87,41 @@ export const CourierScreen: React.FC<CourierScreenProps> = ({data}) => {
           <div className="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-primary">
             代取验证码：TJ-{data.packages[0]?.code ?? '2026'}
           </div>
+          <div className="space-y-3 rounded-xl bg-white p-4">
+            {[
+              ['sent', '已发送申请', '等待附近同学接单'],
+              ['accepted', '王同学已接单', '预计 18:35 到达驿站'],
+              ['delivering', '正在送往宿舍', '预计 18:50 送达 1号楼'],
+              ['delivered', '已送达', '包裹已交付本人'],
+            ].map(([step, title, desc], index) => {
+              const order = ['sent', 'accepted', 'delivering', 'delivered'];
+              const active = order.indexOf(proxyStep) >= index;
+              return (
+                <div key={step} className="flex items-start gap-3">
+                  <div className={`mt-1 h-3 w-3 rounded-full ${active ? 'bg-primary' : 'bg-surface-container-high'}`} />
+                  <div>
+                    <p className={`text-sm font-black ${active ? 'text-on-surface' : 'text-on-surface-variant'}`}>{title}</p>
+                    <p className="text-xs font-medium text-on-surface-variant">{desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
           <button
             className="w-full rounded-full bg-primary-fixed py-3 text-sm font-black text-on-primary-fixed active:scale-95"
             type="button"
-            onClick={() => setMessage('代领取申请已发送给联系人。')}
+            onClick={() => {
+              if (proxyStep === 'draft') {
+                setProxyStep('sent');
+                setMessage('已发送代领取申请，正在等待同学接单。');
+                return;
+              }
+              const nextStep = proxyStep === 'sent' ? 'accepted' : proxyStep === 'accepted' ? 'delivering' : 'delivered';
+              setProxyStep(nextStep);
+              setMessage(nextStep === 'accepted' ? '王同学已接单，预计 18:50 送达。' : nextStep === 'delivering' ? '王同学已取到包裹，正在送往宿舍。' : '包裹已送达，本次代取完成。');
+            }}
           >
-            发送给联系人
+            {proxyStep === 'draft' ? '发送申请' : proxyStep === 'delivered' ? '查看完成记录' : '查看最新进度'}
           </button>
         </section>
       ) : null}

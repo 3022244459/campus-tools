@@ -13,6 +13,19 @@ import {IntegrationPendingNote} from './IntegrationPendingNote';
 
 export const ClubsScreen: React.FC = () => {
   const [message, setMessage] = React.useState('');
+  const [registeredClub, setRegisteredClub] = React.useState('');
+  const [detail, setDetail] = React.useState<{
+    name: string;
+    title: string;
+    desc: string;
+    members: string;
+    activity: string;
+  } | null>(null);
+
+  function openDetail(name: string, title: string, desc: string, members: string, activity: string) {
+    setDetail({name, title, desc, members, activity});
+    setMessage('');
+  }
 
   return (
     <div className="space-y-8 pt-4">
@@ -25,10 +38,10 @@ export const ClubsScreen: React.FC = () => {
           <p className="text-on-secondary-container/80 text-sm mt-2 font-medium">120+ 热门社团正在招新</p>
           <button
             type="button"
-            onClick={() => setMessage('社团报名已提交，活动通知会发送到消息中心。')}
+            onClick={() => openDetail('社团招新中心', '天津大学社团联合招新', '浏览各类社团详情，选择感兴趣的组织后再报名。', '120+ 社团', '本周五 北洋广场')}
             className="mt-4 bg-primary text-white font-bold py-2 px-6 rounded-full text-sm active:scale-95 transition-transform"
           >
-            立即报名
+            浏览社团
           </button>
         </div>
         <div className="absolute right-[-20px] bottom-[-10px] w-48 h-48">
@@ -63,11 +76,51 @@ export const ClubsScreen: React.FC = () => {
           </button>
         </div>
         <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-4 px-4">
-          <ClubChip icon={<Music className="w-6 h-6" />} label="吉他社" members="2.4k" color="bg-secondary-fixed-dim" onClick={() => setMessage('已关注吉他社。')} />
-          <ClubChip icon={<Palette className="w-6 h-6" />} label="动漫艺术" members="1.8k" color="bg-primary-container" onClick={() => setMessage('已关注动漫艺术社。')} />
-          <ClubChip icon={<Trophy className="w-6 h-6" />} label="街球联盟" members="3.1k" color="bg-tertiary-container" onClick={() => setMessage('已关注街球联盟。')} />
+          <ClubChip icon={<Music className="w-6 h-6" />} label="吉他社" members="2.4k" color="bg-secondary-fixed-dim" onClick={() => openDetail('吉他社', '北洋园草坪音乐夜', '面向零基础和进阶同学开放，提供民谣吉他、电吉他和乐队排练。', '2.4k 成员', '周三 19:00 学生活动中心')} />
+          <ClubChip icon={<Palette className="w-6 h-6" />} label="动漫艺术" members="1.8k" color="bg-primary-container" onClick={() => openDetail('动漫艺术社', '角色设计公开课', '包含插画、手办、漫画分镜与同人创作交流。', '1.8k 成员', '周六 14:00 北洋园活动室')} />
+          <ClubChip icon={<Trophy className="w-6 h-6" />} label="街球联盟" members="3.1k" color="bg-tertiary-container" onClick={() => openDetail('街球联盟', '三人篮球挑战赛', '组织校内篮球训练、约战和新生杯赛事。', '3.1k 成员', '每天 18:30 东区球场')} />
         </div>
       </section>
+
+      {detail ? (
+        <section className="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-black text-primary uppercase tracking-widest">{detail.name}</p>
+              <h3 className="mt-1 text-2xl font-black text-on-surface">{detail.title}</h3>
+              <p className="mt-2 text-sm font-medium leading-relaxed text-on-surface-variant">{detail.desc}</p>
+            </div>
+            <button className="rounded-full bg-surface-container-low px-3 py-1 text-xs font-bold text-on-surface-variant" type="button" onClick={() => setDetail(null)}>
+              关闭
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-secondary-container/40 p-4">
+              <p className="text-[10px] font-bold text-on-surface-variant">成员规模</p>
+              <p className="text-lg font-black text-on-surface">{detail.members}</p>
+            </div>
+            <div className="rounded-xl bg-primary-container/15 p-4">
+              <p className="text-[10px] font-bold text-on-surface-variant">近期活动</p>
+              <p className="text-sm font-black text-on-surface">{detail.activity}</p>
+            </div>
+          </div>
+          {registeredClub === detail.name ? (
+            <div className="rounded-xl bg-green-50 px-4 py-3 text-sm font-bold text-green-700">
+              报名已提交，负责人会在消息中心联系你。
+            </div>
+          ) : null}
+          <button
+            className="w-full rounded-xl bg-primary-fixed py-4 text-sm font-black text-on-primary-fixed active:scale-95"
+            type="button"
+            onClick={() => {
+              setRegisteredClub(detail.name);
+              setMessage(`${detail.name} 报名已提交，负责人会在消息中心联系你。`);
+            }}
+          >
+            {registeredClub === detail.name ? '已报名' : '报名加入'}
+          </button>
+        </section>
+      ) : null}
 
       {/* Feed */}
       <section className="space-y-6">
@@ -77,11 +130,11 @@ export const ClubsScreen: React.FC = () => {
           className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm transition-transform active:scale-[0.98] cursor-pointer"
           role="button"
           tabIndex={0}
-          onClick={() => setMessage('已打开街舞大奖赛详情。')}
+          onClick={() => openDetail('街舞社', '北洋园校区街舞大奖赛', '展示你的舞姿，赢取丰厚奖品。今年更有神秘嘉宾助阵。', '860 成员', '周五 19:30 北洋广场')}
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault();
-              setMessage('已打开街舞大奖赛详情。');
+              openDetail('街舞社', '北洋园校区街舞大奖赛', '展示你的舞姿，赢取丰厚奖品。今年更有神秘嘉宾助阵。', '860 成员', '周五 19:30 北洋广场');
             }
           }}
         >

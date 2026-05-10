@@ -17,6 +17,11 @@ export const TeacherLeaveScreen: React.FC<TeacherLeaveScreenProps> = ({session})
   const [actionError, setActionError] = React.useState('');
   const [actionMessage, setActionMessage] = React.useState('');
   const [pendingActionId, setPendingActionId] = React.useState('');
+  const [historyOpen, setHistoryOpen] = React.useState(false);
+  const [historyItems, setHistoryItems] = React.useState<Array<{id: string; title: string; result: string; time: string}>>([
+    {id: 'history-1', title: '赵同学 · 病假 1 天', result: '已批准', time: '昨天 16:20'},
+    {id: 'history-2', title: '刘同学 · 事假 2 天', result: '已驳回', time: '04-18 09:30'},
+  ]);
 
   React.useEffect(() => {
     setViewData(remote.data);
@@ -47,8 +52,20 @@ export const TeacherLeaveScreen: React.FC<TeacherLeaveScreenProps> = ({session})
 
     try {
       const result = await reviewTeacherLeaveApplication(session, applicationId, decision, viewData);
+      const application = viewData.applications.find((item) => item.id === applicationId);
       setViewData(result.data);
       setCurrentSource(result.source);
+      if (application) {
+        setHistoryItems((current) => [
+          {
+            id: `${applicationId}-${decision}`,
+            title: `${application.studentName} · ${application.leaveType}`,
+            result: decision === 'approve' ? '已批准' : '已驳回',
+            time: '刚刚',
+          },
+          ...current,
+        ]);
+      }
       setActionMessage(decision === 'approve' ? '请假申请已批准。' : '请假申请已驳回。');
     } catch (error) {
       setActionError(error instanceof Error ? error.message : '审批失败，请稍后重试。');
@@ -120,12 +137,32 @@ export const TeacherLeaveScreen: React.FC<TeacherLeaveScreenProps> = ({session})
       <button
         className="w-full py-4 bg-surface-container-low text-on-surface-variant font-bold rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
         type="button"
-        onClick={() => setActionMessage('历史审批记录已打开。')}
+        onClick={() => {
+          setHistoryOpen((current) => !current);
+          setActionMessage('历史审批记录已展开。');
+        }}
       >
         <Clock className="w-5 h-5" />
         查看历史审批记录
         <ChevronRight className="w-4 h-4" />
       </button>
+
+      {historyOpen ? (
+        <section className="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-3">
+          <h3 className="text-lg font-black text-on-surface">历史审批记录</h3>
+          {historyItems.map((item) => (
+            <div key={item.id} className="flex items-center justify-between rounded-lg bg-surface-container-low px-4 py-3">
+              <div>
+                <p className="text-sm font-bold text-on-surface">{item.title}</p>
+                <p className="text-xs font-medium text-on-surface-variant">{item.time}</p>
+              </div>
+              <span className={`rounded-full px-3 py-1 text-xs font-black ${item.result === '已批准' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                {item.result}
+              </span>
+            </div>
+          ))}
+        </section>
+      ) : null}
     </div>
   );
 };

@@ -10,8 +10,18 @@ import {
 } from 'lucide-react';
 import {IntegrationPendingNote} from './IntegrationPendingNote';
 
-export const CanteenScreen: React.FC = () => {
+interface CanteenScreenProps {
+  onNavigate: (screen: string) => void;
+}
+
+export const CanteenScreen: React.FC<CanteenScreenProps> = ({onNavigate}) => {
   const [message, setMessage] = React.useState('');
+  const [mapOpen, setMapOpen] = React.useState(false);
+
+  function navigateToCanteen(destination: string) {
+    window.sessionStorage.setItem('campus:navigationDestination', destination);
+    onNavigate('map');
+  }
 
   return (
     <div className="space-y-8 pt-4">
@@ -93,7 +103,7 @@ export const CanteenScreen: React.FC = () => {
           discount="7.5折" 
           items={["香辣鸡腿堡", "鸡块套餐"]} 
           icon={<Beef className="w-6 h-6 text-primary fill-primary" />}
-          onAction={() => setMessage('已为你规划前往第一食堂兰园店的路线。')}
+          onAction={() => navigateToCanteen('北洋园校区 第一食堂 兰园店')}
         />
         <CanteenCard 
           title="第二食堂 (梅园店)" 
@@ -103,14 +113,14 @@ export const CanteenScreen: React.FC = () => {
           items={["全麦吐司", "热牛奶"]} 
           icon={<Croissant className="w-6 h-6 text-secondary fill-secondary" />}
           isSecondary
-          onAction={() => setMessage('已为你规划前往第二食堂梅园店的路线。')}
+          onAction={() => navigateToCanteen('北洋园校区 第二食堂 梅园店')}
         />
 
         {/* Map Shortcut */}
         <button
           className="w-full h-32 rounded-lg bg-surface-container overflow-hidden relative border border-white/50 group cursor-pointer text-left"
           type="button"
-          onClick={() => setMessage('美食地图已打开：北洋园校区 4 个食堂、2 个咖啡点营业中。')}
+          onClick={() => setMapOpen(true)}
         >
           <img 
             src="./images/remote-02-5d43c73c54.png" 
@@ -126,6 +136,46 @@ export const CanteenScreen: React.FC = () => {
           </div>
         </button>
       </section>
+
+      {mapOpen ? (
+        <section className="fixed inset-0 z-50 flex items-end bg-black/40 px-4 pb-4 backdrop-blur-sm" onClick={() => setMapOpen(false)}>
+          <div className="w-full rounded-2xl bg-surface-container-lowest p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-black text-on-surface">北洋园校区美食地图</h3>
+                <p className="text-xs font-bold text-on-surface-variant">食堂、咖啡点、营业状态一览</p>
+              </div>
+              <button className="rounded-full bg-surface-container-low px-4 py-2 text-xs font-bold text-primary" type="button" onClick={() => setMapOpen(false)}>
+                关闭
+              </button>
+            </div>
+            <div className="relative h-64 overflow-hidden rounded-xl bg-[#e7f5ff]">
+              <img src="./images/remote-02-5d43c73c54.png" alt="美食地图" className="h-full w-full object-cover opacity-70" referrerPolicy="no-referrer" />
+              {[
+                ['第一食堂', 'left-[18%] top-[22%]', 'bg-primary'],
+                ['第二食堂', 'right-[18%] top-[32%]', 'bg-secondary'],
+                ['咖啡点', 'left-[42%] bottom-[24%]', 'bg-tertiary'],
+                ['夜宵档', 'right-[28%] bottom-[16%]', 'bg-error'],
+              ].map(([label, position, color]) => (
+                <button
+                  key={label}
+                  className={`absolute ${position} rounded-full ${color} px-3 py-2 text-xs font-black text-white shadow-lg active:scale-95`}
+                  type="button"
+                  onClick={() => navigateToCanteen(`北洋园校区 ${label}`)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-xs font-bold">
+              <div className="rounded-xl bg-green-50 p-3 text-green-700">第一食堂：营业中 · 排队 6 分钟</div>
+              <div className="rounded-xl bg-orange-50 p-3 text-orange-700">第二食堂：高峰中 · 排队 12 分钟</div>
+              <div className="rounded-xl bg-blue-50 p-3 text-blue-700">咖啡点：营业中 · 可自取</div>
+              <div className="rounded-xl bg-purple-50 p-3 text-purple-700">夜宵档：18:00 开始</div>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 };

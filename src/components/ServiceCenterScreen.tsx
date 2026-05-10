@@ -7,6 +7,7 @@ import {
   Compass,
   CreditCard,
   Droplets,
+  FileText,
   Package,
   School,
   Search,
@@ -76,11 +77,12 @@ export const ServiceCenterScreen: React.FC<ServiceCenterProps> = ({onNavigate, s
         </div>
         <div className="grid grid-cols-4 gap-y-6">
           <ServiceIcon icon={<Package className="w-7 h-7" />} label="快递服务" onClick={() => onNavigate('courier')} />
-          <ServiceIcon icon={<Truck className="w-7 h-7" />} label="美食外卖" onClick={() => onNavigate('canteen')} />
+          <ServiceIcon icon={<Truck className="w-7 h-7" />} label="美食外卖" onClick={() => onNavigate('takeout')} />
           <ServiceIcon icon={<Wrench className="w-7 h-7" />} label="报修中心" onClick={() => onNavigate('repair')} />
           <ServiceIcon icon={<SearchCheck className="w-7 h-7" />} label="失物招领" onClick={() => onNavigate('lost-found')} />
           <ServiceIcon icon={<Users className="w-7 h-7" />} label="校园社团" onClick={() => onNavigate('clubs')} />
           <ServiceIcon icon={<Compass className="w-7 h-7" />} label="校园导航" onClick={() => onNavigate('map')} />
+          <ServiceIcon icon={<FileText className="w-7 h-7" />} label="文件代送" onClick={() => onNavigate('document-delivery')} />
           <ServiceIcon icon={<ShoppingBag className="w-7 h-7" />} label="食堂惠购" onClick={() => onNavigate('canteen')} />
           <ServiceIcon icon={<Briefcase className="w-7 h-7" />} label="校园兼职" onClick={() => onNavigate('jobs')} />
         </div>
@@ -145,7 +147,7 @@ export const ServiceCenterScreen: React.FC<ServiceCenterProps> = ({onNavigate, s
           <button
             className="col-span-5 row-span-1 bg-tertiary-container rounded-lg p-4 flex items-center gap-3 text-left active:scale-95 transition-transform"
             type="button"
-            onClick={() => window.alert('空闲教室：第 26 教学楼 B206、B312 当前可用。')}
+            onClick={() => onNavigate('empty-classroom')}
           >
             <div className="w-10 h-10 bg-white/40 rounded-full flex items-center justify-center text-tertiary">
               <BookOpen className="w-5 h-5" />
@@ -155,7 +157,7 @@ export const ServiceCenterScreen: React.FC<ServiceCenterProps> = ({onNavigate, s
           <button
             className="col-span-5 row-span-1 bg-surface-container-highest rounded-lg p-4 flex items-center gap-3 text-left active:scale-95 transition-transform"
             type="button"
-            onClick={() => window.alert('校车时间：北洋园校区 18:30 发车，卫津路校区 19:10 返回。')}
+            onClick={() => onNavigate('shuttle')}
           >
             <div className="w-10 h-10 bg-white/40 rounded-full flex items-center justify-center text-primary">
               <Clock className="w-5 h-5" />

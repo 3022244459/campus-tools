@@ -1,6 +1,6 @@
 import React from 'react';
 import {Beef, Info, Navigation, Pizza, Search, Utensils} from 'lucide-react';
-import {fetchTakeout, submitTakeout} from '../lib/api';
+import {fetchTakeout, fetchWallet, rewardWallet, submitTakeout} from '../lib/api';
 import {emptyTakeoutData} from '../lib/emptyData';
 import {useRemoteData} from '../lib/useRemoteData';
 import type {AuthSession, TakeoutData, TakeoutOrder} from '../lib/types';
@@ -22,6 +22,13 @@ export const TakeoutScreen: React.FC<TakeoutScreenProps> = ({session}) => {
   const [actionError, setActionError] = React.useState('');
   const [actionMessage, setActionMessage] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
+  const [settlingReward, setSettlingReward] = React.useState(false);
+  const [currentOrder, setCurrentOrder] = React.useState<{
+    title: string;
+    destination: string;
+    reward: string;
+    status: 'claimed' | 'picked' | 'delivered';
+  } | null>(null);
 
   React.useEffect(() => {
     setViewData(remote.data);
@@ -70,6 +77,34 @@ export const TakeoutScreen: React.FC<TakeoutScreenProps> = ({session}) => {
       setActionError(error instanceof Error ? error.message : '代取发布失败，请稍后重试。');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDeliverCurrentOrder() {
+    if (!currentOrder || currentOrder.status === 'delivered') {
+      return;
+    }
+
+    const rewardAmount = parseRewardAmount(currentOrder.reward);
+    setSettlingReward(true);
+    setActionError('');
+    setActionMessage('');
+
+    try {
+      const walletResult = await fetchWallet(session);
+      const rewardResult = rewardAmount > 0
+        ? await rewardWallet(session, rewardAmount, walletResult.data)
+        : walletResult;
+      setCurrentOrder({...currentOrder, status: 'delivered'});
+      setActionMessage(
+        rewardAmount > 0
+          ? `订单已送达，赏金 ¥${rewardAmount.toFixed(2)} 已到账，当前钱包余额 ${rewardResult.data.walletBalanceLabel}。`
+          : '订单已送达，任务状态已完成。',
+      );
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : '送达确认失败，请稍后重试。');
+    } finally {
+      setSettlingReward(false);
     }
   }
 
@@ -189,6 +224,47 @@ export const TakeoutScreen: React.FC<TakeoutScreenProps> = ({session}) => {
         </div>
       </section>
 
+      {currentOrder ? (
+        <section className="rounded-xl bg-primary-container p-5 text-white shadow-lg space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-white/70">当前进行中</p>
+              <h3 className="mt-1 text-xl font-black">{currentOrder.title}</h3>
+              <p className="text-sm font-bold text-white/80">{currentOrder.destination} · 赏金 {currentOrder.reward}</p>
+            </div>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-primary">
+              {currentOrder.status === 'claimed' ? '已接单' : currentOrder.status === 'picked' ? '已取餐' : '已送达'}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold">
+            <div className={`rounded-xl p-3 ${currentOrder.status ? 'bg-white text-primary' : 'bg-white/20'}`}>接单</div>
+            <div className={`rounded-xl p-3 ${currentOrder.status === 'picked' || currentOrder.status === 'delivered' ? 'bg-white text-primary' : 'bg-white/20'}`}>取餐</div>
+            <div className={`rounded-xl p-3 ${currentOrder.status === 'delivered' ? 'bg-white text-primary' : 'bg-white/20'}`}>送达</div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              className="rounded-xl bg-white/20 py-3 text-sm font-black active:scale-95 disabled:opacity-50"
+              type="button"
+              disabled={currentOrder.status !== 'claimed'}
+              onClick={() => {
+                setCurrentOrder({...currentOrder, status: 'picked'});
+                setActionMessage('已确认取餐，请尽快送往目的地。');
+              }}
+            >
+              我已取餐
+            </button>
+            <button
+              className="rounded-xl bg-white py-3 text-sm font-black text-primary active:scale-95 disabled:opacity-50"
+              type="button"
+              disabled={currentOrder.status === 'delivered' || settlingReward}
+              onClick={() => void handleDeliverCurrentOrder()}
+            >
+              {settlingReward ? '结算中...' : '确认送达'}
+            </button>
+          </div>
+        </section>
+      ) : null}
+
       <section className="h-48 rounded-lg overflow-hidden relative shadow-sm">
         <img
           src="./images/remote-26-40086edf85.png"
@@ -215,7 +291,15 @@ export const TakeoutScreen: React.FC<TakeoutScreenProps> = ({session}) => {
             <OrderCard
               key={order.id}
               order={order}
-              onClaim={() => setActionMessage(`已抢到「${order.title}」，请尽快联系发布者取餐。`)}
+              onClaim={() => {
+                setCurrentOrder({
+                  title: order.title,
+                  destination: order.destination,
+                  reward: order.reward,
+                  status: 'claimed',
+                });
+                setActionMessage(`已抢到「${order.title}」，当前单已生成。`);
+              }}
             />
           ))}
           {!filteredOrders.length ? (
@@ -282,6 +366,11 @@ function renderOrderIcon(icon: TakeoutOrder['icon']) {
     default:
       return <Beef className="w-6 h-6 fill-secondary" />;
   }
+}
+
+function parseRewardAmount(reward: string): number {
+  const matched = reward.match(/\d+(?:\.\d+)?/);
+  return matched ? Number(matched[0]) : 0;
 }
 
 const StatusNote: React.FC<{loading: boolean; error: string; source: 'api' | 'mock'; message: string}> = ({loading, error, message}) => {

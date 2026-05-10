@@ -17,6 +17,8 @@ export const TeacherStudyRoomScreen: React.FC<TeacherStudyRoomScreenProps> = ({s
   );
   const [query, setQuery] = React.useState('');
   const [message, setMessage] = React.useState('');
+  const [panel, setPanel] = React.useState<'schedule' | 'review' | null>(null);
+  const [approvedRooms, setApprovedRooms] = React.useState<string[]>([]);
 
   const rooms = React.useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -103,7 +105,7 @@ export const TeacherStudyRoomScreen: React.FC<TeacherStudyRoomScreenProps> = ({s
         <button
           className="bg-primary-fixed text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 active:scale-95 transition-transform flex items-center justify-center gap-2"
           type="button"
-          onClick={() => setMessage('研讨室预约表已打开。')}
+          onClick={() => setPanel('schedule')}
         >
           <Calendar className="w-5 h-5" />
           {data.primaryAction}
@@ -111,12 +113,53 @@ export const TeacherStudyRoomScreen: React.FC<TeacherStudyRoomScreenProps> = ({s
         <button
           className="bg-secondary-fixed text-on-secondary-fixed font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
           type="button"
-          onClick={() => setMessage('使用统计已打开。')}
+          onClick={() => setPanel('review')}
         >
           <Users className="w-5 h-5" />
           {data.secondaryAction}
         </button>
       </section>
+
+      {panel === 'schedule' ? (
+        <section className="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-4">
+          <h3 className="text-lg font-black text-on-surface">排课管理</h3>
+          {[
+            ['周二 19:00-21:00', '研讨室 201', '算法答疑'],
+            ['周四 14:00-16:00', '研讨室 102', '项目评审'],
+            ['周六 09:00-11:00', '实验室 405', '课程设计辅导'],
+          ].map(([time, room, title]) => (
+            <button key={`${time}-${room}`} className="flex w-full items-center justify-between rounded-lg bg-surface-container-low px-4 py-3 text-left active:scale-[0.99]" type="button" onClick={() => setMessage(`${room} ${time} 已锁定为「${title}」。`)}>
+              <div>
+                <p className="text-sm font-black text-on-surface">{title}</p>
+                <p className="text-xs font-medium text-on-surface-variant">{time} · {room}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-on-surface-variant" />
+            </button>
+          ))}
+        </section>
+      ) : null}
+
+      {panel === 'review' ? (
+        <section className="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-4">
+          <h3 className="text-lg font-black text-on-surface">预约审核</h3>
+          {['研讨室 201 · 张同学项目讨论', '实验室 405 · 课程设计小组'].map((item) => (
+            <div key={item} className="rounded-lg bg-surface-container-low p-4 space-y-3">
+              <p className="text-sm font-black text-on-surface">{item}</p>
+              <button
+                className="rounded-full bg-primary-fixed px-4 py-2 text-xs font-black text-on-primary-fixed active:scale-95 disabled:opacity-50"
+                type="button"
+                disabled={approvedRooms.includes(item)}
+                onClick={() => {
+                  setApprovedRooms((current) => [...current, item]);
+                  setMessage(`${item} 已通过。`);
+                }}
+              >
+                {approvedRooms.includes(item) ? '已通过' : '通过预约'}
+              </button>
+            </div>
+          ))}
+        </section>
+      ) : null}
 
       <section className="bg-surface-container-highest p-6 rounded-xl flex items-start gap-4">
         <Info className="w-6 h-6 text-primary-fixed shrink-0" />

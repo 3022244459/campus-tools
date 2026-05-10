@@ -7,6 +7,7 @@ import type {
   AuthSession,
   CompareResult,
   CourierData,
+  DocumentDeliveryData,
   HomeBootstrap,
   Identity,
   LostFoundData,
@@ -435,6 +436,30 @@ export async function payWallet(
   return submitWalletDebit(session, '/wallet/pay', amount, currentData, '付款码消费');
 }
 
+export async function rewardWallet(
+  session: AuthSession,
+  amount: number,
+  currentData: WalletData,
+): Promise<RemoteResult<WalletData>> {
+  if (session.source === 'mock') {
+    return {data: applyWalletAdjustment(currentData, amount, '代送任务赏金', true), source: 'mock'};
+  }
+
+  try {
+    const data = await request<WalletData>('/wallet/reward', {
+      method: 'POST',
+      headers: authHeaders(session),
+      body: JSON.stringify({amount}),
+    });
+    return {data, source: 'api'};
+  } catch (error) {
+    if (shouldUseMockFallback(error)) {
+      return {data: applyWalletAdjustment(currentData, amount, '代送任务赏金', true), source: 'mock'};
+    }
+    throw error;
+  }
+}
+
 async function submitWalletDebit(
   session: AuthSession,
   path: string,
@@ -495,6 +520,10 @@ function applyWalletAdjustment(currentData: WalletData, amount: number, title: s
 
 export function fetchTakeout(session: AuthSession): Promise<RemoteResult<TakeoutData>> {
   return withFallback(session, '/takeout', async () => (await loadMockData()).getMockTakeout(session.user.identity));
+}
+
+export function fetchDocumentDelivery(session: AuthSession): Promise<RemoteResult<DocumentDeliveryData>> {
+  return withFallback(session, '/document-delivery', () => getFallbackDocumentDelivery());
 }
 
 export async function submitTakeout(
@@ -783,9 +812,27 @@ function updateMockActivityLostFound(session: AuthSession, payload: LostFoundSub
 }
 
 function normalizeReward(reward: string) {
-  const numericValue = Number(reward.replace('楼', ''));
+  const numericValue = Number(reward.replace('¥', ''));
   const finalValue = Number.isFinite(numericValue) ? numericValue : 0;
-  return `楼${finalValue.toFixed(1)}`;
+  return `¥${finalValue.toFixed(1)}`;
+}
+
+function getFallbackDocumentDelivery(): DocumentDeliveryData {
+  return {
+    tasks: [
+      {
+        id: 'fallback-document-1',
+        teacherName: '李老师',
+        title: '学院盖章材料代送',
+        pickupLabel: '卫津路校区 行政楼 302',
+        destinationLabel: '北洋园校区 第26教学楼 B区',
+        urgency: '加急',
+        reward: '¥6.00',
+        etaText: '预计 20 分钟内送达',
+        status: 'open',
+      },
+    ],
+  };
 }
 
 function resolveApiBase() {

@@ -2,6 +2,7 @@ import type {
   CompareFormState,
   CompareResult,
   CourierData,
+  DocumentDeliveryData,
   HomeBootstrap,
   LostFoundData,
   NavigationData,
@@ -181,6 +182,10 @@ export const emptyTeacherDocumentData: TeacherDocumentData = {
     remarksPlaceholder: '',
   },
   tips: [],
+};
+
+export const emptyDocumentDeliveryData: DocumentDeliveryData = {
+  tasks: [],
 };
 
 export const emptyTeacherLeaveData: TeacherLeaveData = {

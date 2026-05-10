@@ -14,6 +14,16 @@ export const NavigationScreen: React.FC<NavigationScreenProps> = ({session}) => 
   const [query, setQuery] = React.useState('');
   const [message, setMessage] = React.useState('');
 
+  React.useEffect(() => {
+    const destination = window.sessionStorage.getItem('campus:navigationDestination');
+    if (!destination) {
+      return;
+    }
+    window.sessionStorage.removeItem('campus:navigationDestination');
+    setQuery(destination);
+    setMessage(`已为你定位到：${destination}。`);
+  }, []);
+
   const filteredRoutes = React.useMemo(() => {
     if (!query.trim()) {
       return data.routes;
@@ -30,10 +40,10 @@ export const NavigationScreen: React.FC<NavigationScreenProps> = ({session}) => 
       <section className="relative">
         <div className="bg-secondary-container rounded-lg p-6 flex items-center justify-between overflow-hidden">
           <div className="z-10 max-w-[60%]">
-            <h2 className="font-headline font-extrabold text-3xl text-on-secondary-container leading-tight uppercase">
-              {data.heroTitle.split(' ').slice(0, 2).join(' ')}
+            <h2 className="font-headline font-extrabold text-3xl text-on-secondary-container leading-tight">
+              校园导航
               <br />
-              {data.heroTitle.split(' ').slice(2).join(' ')}
+              智能路线
             </h2>
             <p className="font-body text-sm text-on-secondary-container mt-2 opacity-80">{data.heroDescription}</p>
           </div>

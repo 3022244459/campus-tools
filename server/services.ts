@@ -270,6 +270,7 @@ export function submitTakeoutOrder(
   input: TakeoutSubmitInput,
 ): TakeoutRecord {
   const record = db.takeoutByIdentity[identity];
+  const publicRecord = identity === 'teacher' ? db.takeoutByIdentity.student : record;
   const activityRecord = getOrCreateUserActivityRecord(db, userId);
   const nextOrder: TakeoutOrderRecord = {
     id: createRecordId('takeout'),
@@ -280,8 +281,13 @@ export function submitTakeoutOrder(
     icon: input.icon,
   };
 
-  record.orders = [nextOrder, ...record.orders].slice(0, 8);
-  record.nearbyOrders += 1;
+  publicRecord.orders = [nextOrder, ...publicRecord.orders].slice(0, 8);
+  publicRecord.nearbyOrders += 1;
+
+  if (record !== publicRecord) {
+    record.orders = [nextOrder, ...record.orders].slice(0, 8);
+    record.nearbyOrders += 1;
+  }
 
   const activityItem: UserTakeoutHistoryItemRecord = {
     ...nextOrder,
@@ -467,9 +473,9 @@ function getOrCreateUserActivityRecord(db: DatabaseShape, userId: string): UserA
 }
 
 function normalizeReward(reward: string) {
-  const numericValue = Number(reward.replace('楼', ''));
+  const numericValue = Number(reward.replace('¥', ''));
   const finalValue = Number.isFinite(numericValue) ? numericValue : 0;
-  return `楼${finalValue.toFixed(1)}`;
+  return `¥${finalValue.toFixed(1)}`;
 }
 
 function countValues<T>(record: Record<string, T>, mapper: (item: T) => number): number {

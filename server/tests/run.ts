@@ -352,7 +352,7 @@ async function run() {
 
   const nextTakeout = submitTakeoutOrder(draft, 'stu-001', 'student', takeoutInput);
   assert.equal(nextTakeout.orders[0]?.title, '奶茶代取');
-  assert.equal(nextTakeout.orders[0]?.reward, '楼4.5');
+  assert.equal(nextTakeout.orders[0]?.reward, '¥4.5');
   assert.equal(draft.userActivityByUserId['stu-001'].takeoutOrders[0]?.status, 'open');
 
   const nextLeave = reviewTeacherLeave(draft, 'tea-001', reviewInput);

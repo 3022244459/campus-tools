@@ -460,6 +460,22 @@ export interface TeacherDocumentData {
   tips: string[];
 }
 
+export interface DocumentDeliveryTask {
+  id: string;
+  teacherName: string;
+  title: string;
+  pickupLabel: string;
+  destinationLabel: string;
+  urgency: string;
+  reward: string;
+  etaText: string;
+  status: 'open' | 'claimed' | 'picked' | 'delivered';
+}
+
+export interface DocumentDeliveryData {
+  tasks: DocumentDeliveryTask[];
+}
+
 export type ReviewDecision = 'approve' | 'reject';
 
 export interface TeacherDocumentSubmitPayload {

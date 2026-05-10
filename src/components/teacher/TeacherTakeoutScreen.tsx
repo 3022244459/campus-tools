@@ -1,6 +1,6 @@
 import React from 'react';
 import {Bike, ChevronRight, Coffee, Headset, History, MapPin, Utensils} from 'lucide-react';
-import {fetchTakeout} from '../../lib/api';
+import {fetchTakeout, submitTakeout} from '../../lib/api';
 import {emptyTakeoutData} from '../../lib/emptyData';
 import {useRemoteData} from '../../lib/useRemoteData';
 import type {AuthSession, TakeoutData, TakeoutOrder} from '../../lib/types';
@@ -15,21 +15,55 @@ export const TeacherTakeoutScreen: React.FC<TeacherTakeoutScreenProps> = ({sessi
     emptyTakeoutData,
     fetchTakeout,
   );
+  const [viewData, setViewData] = React.useState<TakeoutData>(data);
   const [message, setMessage] = React.useState('');
+  const [formOpen, setFormOpen] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [title, setTitle] = React.useState('教工食堂午餐代取');
+  const [destination, setDestination] = React.useState('送到 卫津路校区 行政楼 302');
+  const [reward, setReward] = React.useState('6');
+  const [tags, setTags] = React.useState('工作餐, 20分钟内');
+
+  React.useEffect(() => {
+    setViewData(data);
+  }, [data]);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setMessage('');
+
+    try {
+      const result = await submitTakeout(session, {
+        title,
+        destination,
+        reward,
+        tags: tags.split(/[,，]/).map((item) => item.trim()).filter(Boolean).slice(0, 3),
+        icon: 'utensils',
+      }, viewData);
+      setViewData(result.data);
+      setFormOpen(false);
+      setMessage('外卖代取已发布，学生端待接单列表可见，学生抢单送达后会自动结算赏金。');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '外卖代取发布失败，请稍后重试。');
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="space-y-8 pt-4 pb-20">
       <section className="relative overflow-hidden bg-secondary-fixed-dim rounded-xl p-8 shadow-lg min-h-[220px]">
         <div className="relative z-10 space-y-4 max-w-[60%]">
           <h2 className="text-3xl font-extrabold text-on-secondary-fixed leading-tight whitespace-pre-line">
-            {data.heroTitle.replace(' ', '\n')}
+            {viewData.heroTitle.replace(' ', '\n')}
           </h2>
-          <p className="text-on-secondary-fixed/80 text-sm font-medium">{data.heroDescription}</p>
+          <p className="text-on-secondary-fixed/80 text-sm font-medium">{viewData.heroDescription}</p>
           <div className="flex gap-3 pt-2">
             <button
               className="bg-primary-fixed text-on-primary-fixed px-6 py-3 rounded-full font-bold text-sm shadow-md active:scale-95 transition-transform"
               type="button"
-              onClick={() => setMessage('外卖代取订单已提交，等待骑手接单。')}
+              onClick={() => setFormOpen((current) => !current)}
             >
               立即下单
             </button>
@@ -59,15 +93,35 @@ export const TeacherTakeoutScreen: React.FC<TeacherTakeoutScreenProps> = ({sessi
         </section>
       ) : null}
 
+      {formOpen ? (
+        <section className="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-black text-on-surface">填写外卖代取信息</h3>
+            <span className="rounded-full bg-primary-container/15 px-3 py-1 text-xs font-bold text-primary">学生可接单</span>
+          </div>
+          <form className="space-y-3" onSubmit={handleSubmit}>
+            <input className="w-full rounded-xl bg-surface-container-low px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="外卖内容" />
+            <input className="w-full rounded-xl bg-surface-container-low px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="送达地点" />
+            <div className="grid grid-cols-3 gap-3">
+              <input className="rounded-xl bg-surface-container-low px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary" value={reward} onChange={(event) => setReward(event.target.value)} inputMode="decimal" placeholder="赏金" />
+              <input className="col-span-2 rounded-xl bg-surface-container-low px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary" value={tags} onChange={(event) => setTags(event.target.value)} placeholder="标签" />
+            </div>
+            <button className="w-full rounded-xl bg-primary-fixed py-4 text-sm font-black text-on-primary-fixed active:scale-95 disabled:opacity-60" type="submit" disabled={submitting}>
+              {submitting ? '发布中...' : '发布到学生端'}
+            </button>
+          </form>
+        </section>
+      ) : null}
+
       <section className="space-y-4">
         <div className="flex justify-between items-end">
           <h3 className="text-2xl font-bold text-on-surface">实时代取地图</h3>
           <button
             className="text-primary font-bold text-sm cursor-pointer active:scale-95"
             type="button"
-            onClick={() => setMessage(`附近共有 ${data.nearbyOrders} 单可查看。`)}
+            onClick={() => setMessage(`附近共有 ${viewData.nearbyOrders} 单可查看。`)}
           >
-            附近 {data.nearbyOrders} 单
+            附近 {viewData.nearbyOrders} 单
           </button>
         </div>
         <div className="relative w-full h-64 rounded-lg overflow-hidden bg-surface-container shadow-inner border-4 border-white">
@@ -101,7 +155,7 @@ export const TeacherTakeoutScreen: React.FC<TeacherTakeoutScreenProps> = ({sessi
       <section className="space-y-4 pb-10">
         <h3 className="text-2xl font-bold text-on-surface">外卖动态</h3>
         <div className="grid grid-cols-2 gap-4">
-          {data.orders.map((order, index) => (
+          {viewData.orders.map((order, index) => (
             <OrderCard key={order.id} order={order} featured={index === 0} />
           ))}
           <button

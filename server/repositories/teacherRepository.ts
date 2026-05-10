@@ -43,7 +43,22 @@ export interface TeacherRepository {
 
 export const teacherRepository: TeacherRepository = {
   getOffice(user) {
-    return getTeacherOfficeData(databaseRepository.getSnapshot(), user.id);
+    const db = databaseRepository.getSnapshot();
+    const data = getTeacherOfficeData(db, user.id);
+    if (!data) {
+      return null;
+    }
+
+    const hasLeave = (db.teacherLeaveByUserId[user.id]?.applications.length ?? 0) > 0;
+    const hasAffair = (db.teacherStudentAffairsByUserId[user.id]?.applications.length ?? 0) > 0;
+    return {
+      ...data,
+      approvals: data.approvals.filter((item) => (
+        (item.id === 'approval-1' && hasLeave) ||
+        (item.id === 'approval-2' && hasAffair) ||
+        (item.id !== 'approval-1' && item.id !== 'approval-2')
+      )),
+    };
   },
 
   getMeeting(user) {

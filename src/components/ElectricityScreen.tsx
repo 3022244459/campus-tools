@@ -8,7 +8,7 @@ import {
   ChevronRight,
   Lightbulb
 } from 'lucide-react';
-import {fetchUtilities, payElectricity, setElectricityReminder} from '../lib/api';
+import {fetchUtilities, fetchWallet, payElectricity, setElectricityReminder} from '../lib/api';
 import type {AuthSession, UtilityData} from '../lib/types';
 import {IntegrationPendingNote} from './IntegrationPendingNote';
 
@@ -20,6 +20,8 @@ export const ElectricityScreen: React.FC<ElectricityScreenProps> = ({session}) =
   const [utilityData, setUtilityData] = React.useState<UtilityData>(getInitialUtilityData(session.user.identity));
   const [message, setMessage] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
+  const [selectedAmount, setSelectedAmount] = React.useState(30);
+  const [customAmount, setCustomAmount] = React.useState('');
 
   React.useEffect(() => {
     let active = true;
@@ -45,9 +47,15 @@ export const ElectricityScreen: React.FC<ElectricityScreenProps> = ({session}) =
     setMessage('');
 
     try {
-      const result = await payElectricity(session, 30, utilityData);
+      const amount = customAmount ? Number(customAmount) : selectedAmount;
+      if (!Number.isFinite(amount) || amount <= 0) {
+        setMessage('请输入正确的缴费度数。');
+        return;
+      }
+      const result = await payElectricity(session, Number(amount.toFixed(2)), utilityData);
+      const walletResult = await fetchWallet(session);
       setUtilityData(result.data);
-      setMessage(`缴费成功，当前剩余电量 ${result.data.electricityKwh.toFixed(2)} 度。`);
+      setMessage(`缴费成功，当前剩余电量 ${result.data.electricityKwh.toFixed(2)} 度，钱包已扣 ¥${amount.toFixed(2)}，余额 ${walletResult.data.walletBalanceLabel}。`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '电费缴纳失败，请稍后重试。');
     } finally {
@@ -88,6 +96,30 @@ export const ElectricityScreen: React.FC<ElectricityScreenProps> = ({session}) =
             <p className="font-headline font-bold text-on-primary-container/70 text-sm tracking-wider uppercase">Dormitory 402</p>
             <h2 className="font-headline font-extrabold text-white text-5xl mt-2 tracking-tight">{utilityData.electricityKwh.toFixed(2)} <span className="text-xl">度</span></h2>
             <p className="text-white/90 font-medium mt-1">当前剩余电量</p>
+            <div className="mt-5 grid max-w-[260px] grid-cols-3 gap-2">
+              {[20, 30, 50].map((amount) => (
+                <button
+                  key={amount}
+                  className={`rounded-full px-3 py-2 text-xs font-black active:scale-95 ${
+                    !customAmount && selectedAmount === amount ? 'bg-white text-primary' : 'bg-white/25 text-white'
+                  }`}
+                  type="button"
+                  onClick={() => {
+                    setSelectedAmount(amount);
+                    setCustomAmount('');
+                  }}
+                >
+                  {amount} 度
+                </button>
+              ))}
+            </div>
+            <input
+              className="mt-3 w-40 rounded-full border-none bg-white/25 px-4 py-2 text-sm font-bold text-white placeholder:text-white/70 focus:ring-2 focus:ring-white"
+              value={customAmount}
+              onChange={(event) => setCustomAmount(event.target.value)}
+              inputMode="decimal"
+              placeholder="自定义度数"
+            />
             <div className="mt-8">
               <button
                 type="button"
@@ -95,7 +127,7 @@ export const ElectricityScreen: React.FC<ElectricityScreenProps> = ({session}) =
                 disabled={submitting}
                 className="bg-white text-primary px-8 py-3 rounded-xl font-bold text-sm active:scale-95 transition-transform"
               >
-                {submitting ? '处理中...' : '立即缴费'}
+                {submitting ? '处理中...' : `缴费 ${customAmount || selectedAmount} 度`}
               </button>
             </div>
           </div>

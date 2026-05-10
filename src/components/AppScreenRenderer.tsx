@@ -10,7 +10,10 @@ import {ElectricityScreen} from './ElectricityScreen';
 import {WalletScreen} from './WalletScreen';
 import {CourierCompareScreen} from './CourierCompareScreen';
 import {CanteenScreen} from './CanteenScreen';
+import {EmptyClassroomScreen} from './EmptyClassroomScreen';
 import {JobsScreen} from './JobsScreen';
+import {ShuttleScheduleScreen} from './ShuttleScheduleScreen';
+import {StudentDocumentDeliveryScreen} from './StudentDocumentDeliveryScreen';
 import {ServiceCenterScreen} from './ServiceCenterScreen';
 import {ProfileScreen} from './ProfileScreen';
 import {MyTakeoutOrdersScreen} from './MyTakeoutOrdersScreen';
@@ -133,8 +136,14 @@ export function AppScreenRenderer({
       return <WalletScreen data={walletData} session={session} />;
     case 'courier-compare':
       return <CourierCompareScreen session={session} />;
+    case 'document-delivery':
+      return <StudentDocumentDeliveryScreen session={session} />;
     case 'canteen':
-      return <CanteenScreen />;
+      return <CanteenScreen onNavigate={onNavigate} />;
+    case 'empty-classroom':
+      return <EmptyClassroomScreen />;
+    case 'shuttle':
+      return <ShuttleScheduleScreen />;
     case 'jobs':
       return <JobsScreen />;
     case 'my-orders':

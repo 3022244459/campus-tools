@@ -2,6 +2,7 @@ import {Router} from 'express';
 import {
   compareQuoteController,
   courierController,
+  documentDeliveryController,
   electricityReminderController,
   homeBootstrapController,
   lostFoundController,
@@ -9,6 +10,7 @@ import {
   payWalletController,
   payElectricityController,
   rechargeWalletController,
+  rewardWalletController,
   rechargeWaterController,
   repairController,
   serviceCenterController,
@@ -43,11 +45,13 @@ export function createCampusRouter() {
   router.post('/wallet/recharge', rechargeWalletController);
   router.post('/wallet/withdraw', withdrawWalletController);
   router.post('/wallet/pay', payWalletController);
+  router.post('/wallet/reward', rewardWalletController);
   router.get('/utilities', utilitiesController);
   router.post('/utilities/water/recharge', rechargeWaterController);
   router.post('/utilities/electricity/pay', payElectricityController);
   router.post('/utilities/electricity/reminder', electricityReminderController);
   router.post('/courier-compare/quote', compareQuoteController);
+  router.get('/document-delivery', documentDeliveryController);
 
   return router;
 }
