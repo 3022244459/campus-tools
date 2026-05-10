@@ -1,88 +1,143 @@
 import React from 'react';
-import { 
-  ChevronLeft, 
-  GraduationCap, 
-  ArrowRight 
-} from 'lucide-react';
-import { motion } from 'motion/react';
+import {ArrowRight, GraduationCap, LoaderCircle} from 'lucide-react';
+import {motion} from 'motion/react';
+import type {Identity} from '../lib/types';
 
 interface IdentitySelectionProps {
-  onSelect: (identity: 'student' | 'teacher') => void;
+  onLogin: (identity: Identity, username: string, password: string) => void;
+  loading: boolean;
+  error: string;
+  defaultIdentity?: Identity;
 }
 
-export const IdentitySelectionScreen: React.FC<IdentitySelectionProps> = ({ onSelect }) => {
-  const [selected, setSelected] = React.useState<'student' | 'teacher' | null>(null);
+const showDemoCredentials = import.meta.env.DEV ||
+  import.meta.env.VITE_SHOW_DEMO_CREDENTIALS === 'true' ||
+  import.meta.env.VITE_SHOW_DEMO_CREDENTIALS === '1' ||
+  import.meta.env.VITE_SHOW_DEMO_CREDENTIALS === 'yes';
+
+export const IdentitySelectionScreen: React.FC<IdentitySelectionProps> = ({
+  onLogin,
+  loading,
+  error,
+  defaultIdentity = 'student',
+}) => {
+  const initialIdentity = defaultIdentity as Identity;
+  const [selected, setSelected] = React.useState<Identity>(initialIdentity);
+  const [username, setUsername] = React.useState(() => getDemoUsername(initialIdentity));
+  const [password, setPassword] = React.useState(() => getDemoPassword());
+
+  React.useEffect(() => {
+    setUsername(getDemoUsername(selected));
+    setPassword(getDemoPassword());
+  }, [selected]);
 
   return (
     <div className="min-h-screen bg-surface text-on-surface flex flex-col items-center justify-between py-12 px-6 max-w-md mx-auto relative overflow-hidden">
-      {/* Background Decorations */}
       <div className="fixed -top-12 -left-12 w-48 h-48 bg-primary-fixed/5 rounded-full blur-3xl pointer-events-none"></div>
       <div className="fixed top-1/2 -right-12 w-64 h-64 bg-secondary/5 rounded-full blur-3xl pointer-events-none"></div>
 
-      {/* Top Branding */}
       <header className="flex flex-col items-center space-y-4 relative z-10">
         <div className="relative">
           <div className="absolute inset-0 bg-primary-container blur-2xl opacity-20 rounded-2xl"></div>
-          <img 
-            src="./images/remote-12-d769ee83a1.png" 
-            alt="Logo" 
+          <img
+            src="./images/remote-12-d769ee83a1.png"
+            alt="Logo"
             className="w-24 h-24 relative z-10 drop-shadow-xl rounded-2xl object-cover"
             referrerPolicy="no-referrer"
           />
         </div>
         <div className="text-center">
           <h1 className="text-4xl font-extrabold tracking-tight text-primary-fixed">校园宝</h1>
-          <p className="text-on-surface-variant font-medium mt-1">请选择您的校园身份</p>
+          <p className="text-on-surface-variant font-medium mt-1">选择身份后即可进入校园服务系统</p>
         </div>
       </header>
 
-      {/* Selection Grid */}
       <main className="w-full space-y-6 relative z-10">
         <div className="grid grid-cols-2 gap-6">
-          <IdentityCard 
-            label="我是学生" 
-            type="student" 
-            selected={selected === 'student'} 
+          <IdentityCard
+            label="我是学生"
+            type="student"
+            selected={selected === 'student'}
             onClick={() => setSelected('student')}
             color="bg-[#66CCFF]"
             accentColor="bg-[#66CCFF]"
           />
-          <IdentityCard 
-            label="我是老师" 
-            type="teacher" 
-            selected={selected === 'teacher'} 
+          <IdentityCard
+            label="我是老师"
+            type="teacher"
+            selected={selected === 'teacher'}
             onClick={() => setSelected('teacher')}
             color="bg-primary-fixed"
             accentColor="bg-primary-fixed"
           />
         </div>
 
-        {/* Description Card */}
-        <div className="bg-surface-container-low p-6 rounded-lg border-2 border-dashed border-outline-variant/30">
+        <div className="bg-surface-container-low p-6 rounded-lg border-2 border-dashed border-outline-variant/30 space-y-4">
           <div className="flex items-start gap-4">
             <div className="bg-primary-fixed p-2 rounded-full">
               <GraduationCap className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1">
               <p className="text-sm text-on-surface-variant leading-relaxed">
-                选择身份后，我们将为您定制个性化的校园功能，包括课程表、成绩查询或教学管理工具。
+                {showDemoCredentials
+                  ? '当前已启用登录与会话持久化。默认填充的是可直接登录的测试账号。'
+                  : '请输入学校统一身份账号。'}
               </p>
             </div>
           </div>
+
+          <label className="block">
+            <span className="text-xs font-semibold text-on-surface-variant">账号</span>
+            <input
+              className="mt-2 w-full rounded-xl border border-outline-variant/20 bg-surface-container-lowest px-4 py-3 text-sm font-medium text-on-surface outline-none focus:border-primary"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="请输入账号"
+              autoComplete="username"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-xs font-semibold text-on-surface-variant">密码</span>
+            <input
+              className="mt-2 w-full rounded-xl border border-outline-variant/20 bg-surface-container-lowest px-4 py-3 text-sm font-medium text-on-surface outline-none focus:border-primary"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="请输入密码"
+              type="password"
+              autoComplete="current-password"
+            />
+          </label>
+
+          {showDemoCredentials ? (
+            <p className="text-xs text-on-surface-variant">
+              测试账号：`student001 / campus123`、`teacher001 / campus123`、管理员请选择教师入口并使用 `admin001 / campus123`
+            </p>
+          ) : null}
+
+          {error ? (
+            <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">{error}</p>
+          ) : null}
         </div>
       </main>
 
-      {/* Footer Actions */}
       <footer className="w-full flex flex-col items-center gap-4 relative z-10">
-        <button 
-          disabled={!selected}
-          onClick={() => selected && onSelect(selected)}
-          className={`w-full py-5 font-bold text-xl rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_8px_0_0_#CC6600] active:shadow-none active:translate-y-2 ${
-            selected ? 'bg-primary-fixed text-white' : 'bg-gray-300 text-gray-500 shadow-none cursor-not-allowed'
-          }`}
+        <button
+          onClick={() => onLogin(selected, username.trim(), password.trim())}
+          disabled={loading}
+          className="w-full py-5 font-bold text-xl rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_8px_0_0_#CC6600] active:shadow-none active:translate-y-2 bg-primary-fixed text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:translate-y-0"
         >
-          <span>完成</span>
-          <ArrowRight className="w-6 h-6" />
+          {loading ? (
+            <>
+              <LoaderCircle className="w-5 h-5 animate-spin" />
+              <span>登录中</span>
+            </>
+          ) : (
+            <>
+              <span>进入校园宝</span>
+              <ArrowRight className="w-6 h-6" />
+            </>
+          )}
         </button>
         <div className="flex items-center gap-2 text-xs text-on-surface-variant font-medium opacity-60">
           <span>继续即表示您同意</span>
@@ -95,26 +150,34 @@ export const IdentitySelectionScreen: React.FC<IdentitySelectionProps> = ({ onSe
   );
 };
 
-const IdentityCard: React.FC<{ 
-  label: string; 
-  type: 'student' | 'teacher'; 
-  selected: boolean; 
+function getDemoUsername(identity: Identity): string {
+  if (!showDemoCredentials) {
+    return '';
+  }
+
+  return identity === 'student' ? 'student001' : 'teacher001';
+}
+
+function getDemoPassword(): string {
+  return showDemoCredentials ? 'campus123' : '';
+}
+
+const IdentityCard: React.FC<{
+  label: string;
+  type: Identity;
+  selected: boolean;
   onClick: () => void;
   color: string;
   accentColor: string;
-}> = ({ label, type, selected, onClick, color, accentColor }) => (
-  <button 
+}> = ({label, type, selected, onClick, color, accentColor}) => (
+  <button
     onClick={onClick}
     className={`group relative flex flex-col items-center justify-center bg-surface-container-lowest p-6 rounded-lg transition-all duration-300 active:scale-95 border-2 shadow-sm ${
-      selected ? `border-primary-fixed ring-2 ring-primary-fixed/20` : 'border-transparent hover:border-gray-200'
+      selected ? 'border-primary-fixed ring-2 ring-primary-fixed/20' : 'border-transparent hover:border-gray-200'
     }`}
   >
     <div className={`w-28 h-28 mb-4 rounded-full flex items-center justify-center transition-colors relative overflow-visible ${color}/10`}>
-      {type === 'student' ? (
-        <StudentAvatar />
-      ) : (
-        <TeacherAvatar />
-      )}
+      {type === 'student' ? <StudentAvatar /> : <TeacherAvatar />}
     </div>
     <span className="text-lg font-bold text-on-surface">{label}</span>
     <div className={`mt-2 h-1.5 rounded-full transition-all ${accentColor} ${

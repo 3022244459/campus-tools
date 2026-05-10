@@ -9,16 +9,27 @@ import {
   Share2,
   Camera
 } from 'lucide-react';
+import {IntegrationPendingNote} from './IntegrationPendingNote';
 
 export const ClubsScreen: React.FC = () => {
+  const [message, setMessage] = React.useState('');
+
   return (
     <div className="space-y-8 pt-4">
+      <IntegrationPendingNote />
+
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-secondary-container rounded-lg p-6 flex items-center justify-between shadow-sm">
         <div className="z-10 max-w-[60%]">
           <h2 className="text-3xl font-extrabold text-on-secondary-container leading-tight">发现<br/>你的色彩</h2>
           <p className="text-on-secondary-container/80 text-sm mt-2 font-medium">120+ 热门社团正在招新</p>
-          <button className="mt-4 bg-primary-fixed text-on-primary-fixed font-bold py-2 px-6 rounded-full text-sm shadow-lg transform transition active:scale-95">活动报名</button>
+          <button
+            type="button"
+            onClick={() => setMessage('社团报名已提交，活动通知会发送到消息中心。')}
+            className="mt-4 bg-primary text-white font-bold py-2 px-6 rounded-full text-sm active:scale-95 transition-transform"
+          >
+            立即报名
+          </button>
         </div>
         <div className="absolute right-[-20px] bottom-[-10px] w-48 h-48">
           <img 
@@ -30,6 +41,12 @@ export const ClubsScreen: React.FC = () => {
         </div>
       </section>
 
+      {message ? (
+        <section className="rounded-lg bg-primary-container/15 px-4 py-3 text-sm font-bold text-primary">
+          {message}
+        </section>
+      ) : null}
+
       {/* Hot Clubs */}
       <section className="space-y-4">
         <div className="flex justify-between items-end">
@@ -37,12 +54,18 @@ export const ClubsScreen: React.FC = () => {
             <h3 className="text-xl font-extrabold">热门社团</h3>
             <p className="text-on-surface-variant text-xs">大家都在关注的圈子</p>
           </div>
-          <span className="text-primary font-bold text-xs cursor-pointer">查看全部</span>
+          <button
+            className="text-primary font-bold text-xs cursor-pointer active:scale-95"
+            type="button"
+            onClick={() => setMessage('已展开热门社团：吉他社、动漫艺术、街球联盟、摄影社、街舞社。')}
+          >
+            查看全部
+          </button>
         </div>
         <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-4 px-4">
-          <ClubChip icon={<Music className="w-6 h-6" />} label="吉他社" members="2.4k" color="bg-secondary-fixed-dim" />
-          <ClubChip icon={<Palette className="w-6 h-6" />} label="动漫艺术" members="1.8k" color="bg-primary-container" />
-          <ClubChip icon={<Trophy className="w-6 h-6" />} label="街球联盟" members="3.1k" color="bg-tertiary-container" />
+          <ClubChip icon={<Music className="w-6 h-6" />} label="吉他社" members="2.4k" color="bg-secondary-fixed-dim" onClick={() => setMessage('已关注吉他社。')} />
+          <ClubChip icon={<Palette className="w-6 h-6" />} label="动漫艺术" members="1.8k" color="bg-primary-container" onClick={() => setMessage('已关注动漫艺术社。')} />
+          <ClubChip icon={<Trophy className="w-6 h-6" />} label="街球联盟" members="3.1k" color="bg-tertiary-container" onClick={() => setMessage('已关注街球联盟。')} />
         </div>
       </section>
 
@@ -50,7 +73,18 @@ export const ClubsScreen: React.FC = () => {
       <section className="space-y-6">
         <h3 className="text-xl font-extrabold">社团动态</h3>
         
-        <article className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm transition-transform active:scale-[0.98]">
+        <article
+          className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm transition-transform active:scale-[0.98] cursor-pointer"
+          role="button"
+          tabIndex={0}
+          onClick={() => setMessage('已打开街舞大奖赛详情。')}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setMessage('已打开街舞大奖赛详情。');
+            }
+          }}
+        >
           <div className="h-48 w-full relative">
             <img 
               src="./images/remote-04-46876cabcf.png" 
@@ -65,7 +99,7 @@ export const ClubsScreen: React.FC = () => {
               <div className="w-6 h-6 rounded-full bg-secondary-fixed"></div>
               <span className="text-xs font-bold text-on-surface-variant">街舞社 · 2小时前</span>
             </div>
-            <h4 className="text-lg font-bold leading-tight">卧龙校区街舞大奖赛：报名通道正式开启！</h4>
+            <h4 className="text-lg font-bold leading-tight">北洋园校区街舞大奖赛：报名通道正式开启！</h4>
             <p className="text-on-surface-variant text-sm line-clamp-2">展示你的舞姿，赢取丰厚奖品。今年更有神秘嘉宾助阵，快来加入我们的节奏之战...</p>
             <div className="flex justify-between items-center pt-2">
               <div className="flex -space-x-2">
@@ -74,7 +108,16 @@ export const ClubsScreen: React.FC = () => {
                 <div className="w-6 h-6 rounded-full border-2 border-white bg-pink-200"></div>
                 <div className="text-[10px] flex items-center pl-4 font-medium text-on-surface-variant">+42 报名</div>
               </div>
-              <Heart className="w-5 h-5 text-primary fill-primary cursor-pointer" />
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setMessage('已收藏街舞大奖赛。');
+                }}
+                aria-label="收藏街舞大奖赛"
+              >
+                <Heart className="w-5 h-5 text-primary fill-primary cursor-pointer" />
+              </button>
             </div>
           </div>
         </article>
@@ -84,7 +127,13 @@ export const ClubsScreen: React.FC = () => {
             <span className="text-[10px] font-bold text-secondary uppercase tracking-tighter">专题讲座</span>
             <h4 className="font-bold text-base">摄影社：从构图到光影的魔法</h4>
             <p className="text-xs text-on-surface-variant leading-relaxed">主讲：校报资深摄影师 张同学<br/>地点：行政楼 302</p>
-            <button className="bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold px-4 py-1.5 rounded-full mt-2">点击收藏</button>
+            <button
+              className="bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold px-4 py-1.5 rounded-full mt-2 active:scale-95"
+              type="button"
+              onClick={() => setMessage('摄影社讲座已收藏。')}
+            >
+              点击收藏
+            </button>
           </div>
           <div className="w-24 h-24 rounded-lg overflow-hidden z-10">
             <img 
@@ -101,12 +150,16 @@ export const ClubsScreen: React.FC = () => {
   );
 };
 
-const ClubChip: React.FC<{ icon: React.ReactNode; label: string; members: string; color: string }> = ({ icon, label, members, color }) => (
-  <div className="flex-shrink-0 w-40 bg-surface-container-lowest rounded-lg p-4 shadow-sm border-b-4 border-black/5">
+const ClubChip: React.FC<{ icon: React.ReactNode; label: string; members: string; color: string; onClick: () => void }> = ({ icon, label, members, color, onClick }) => (
+  <button
+    className="flex-shrink-0 w-40 bg-surface-container-lowest rounded-lg p-4 text-left shadow-sm border-b-4 border-black/5 active:scale-95 transition-transform"
+    type="button"
+    onClick={onClick}
+  >
     <div className={`w-12 h-12 rounded-full ${color} flex items-center justify-center mb-3 text-white`}>
       {icon}
     </div>
     <p className="font-bold text-sm">{label}</p>
     <p className="text-[10px] text-on-surface-variant mt-1">{members} 成员</p>
-  </div>
+  </button>
 );

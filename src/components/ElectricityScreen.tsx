@@ -8,10 +8,71 @@ import {
   ChevronRight,
   Lightbulb
 } from 'lucide-react';
+import {fetchUtilities, payElectricity, setElectricityReminder} from '../lib/api';
+import type {AuthSession, UtilityData} from '../lib/types';
+import {IntegrationPendingNote} from './IntegrationPendingNote';
 
-export const ElectricityScreen: React.FC = () => {
+interface ElectricityScreenProps {
+  session: AuthSession;
+}
+
+export const ElectricityScreen: React.FC<ElectricityScreenProps> = ({session}) => {
+  const [utilityData, setUtilityData] = React.useState<UtilityData>(getInitialUtilityData(session.user.identity));
+  const [message, setMessage] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+
+  React.useEffect(() => {
+    let active = true;
+    fetchUtilities(session)
+      .then((result) => {
+        if (active) {
+          setUtilityData(result.data);
+        }
+      })
+      .catch((error) => {
+        if (active) {
+          setMessage(error instanceof Error ? error.message : '电费信息读取失败。');
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [session]);
+
+  async function handlePay() {
+    setSubmitting(true);
+    setMessage('');
+
+    try {
+      const result = await payElectricity(session, 30, utilityData);
+      setUtilityData(result.data);
+      setMessage(`缴费成功，当前剩余电量 ${result.data.electricityKwh.toFixed(2)} 度。`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '电费缴纳失败，请稍后重试。');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleReminderToggle() {
+    const nextEnabled = !utilityData.reminderEnabled;
+    setUtilityData((current) => ({...current, reminderEnabled: nextEnabled}));
+    setMessage(nextEnabled ? '低电量提醒已开启。' : '低电量提醒已关闭。');
+
+    try {
+      const result = await setElectricityReminder(session, nextEnabled, utilityData);
+      setUtilityData(result.data);
+    } catch (error) {
+      setUtilityData((current) => ({...current, reminderEnabled: !nextEnabled}));
+      setMessage(error instanceof Error ? error.message : '提醒设置保存失败。');
+    }
+  }
+
   return (
     <div className="space-y-8 pt-4">
+      <IntegrationPendingNote />
+
       {/* Hero Section */}
       <section className="relative">
         <div className="bg-primary-container rounded-lg p-8 shadow-lg overflow-hidden relative">
@@ -25,16 +86,27 @@ export const ElectricityScreen: React.FC = () => {
           </div>
           <div className="relative z-10">
             <p className="font-headline font-bold text-on-primary-container/70 text-sm tracking-wider uppercase">Dormitory 402</p>
-            <h2 className="font-headline font-extrabold text-white text-5xl mt-2 tracking-tight">36.50 <span className="text-xl">度</span></h2>
+            <h2 className="font-headline font-extrabold text-white text-5xl mt-2 tracking-tight">{utilityData.electricityKwh.toFixed(2)} <span className="text-xl">度</span></h2>
             <p className="text-white/90 font-medium mt-1">当前剩余电量</p>
             <div className="mt-8">
-              <button className="bg-on-background text-white px-8 py-3 rounded-xl font-bold text-sm transition-transform active:scale-95">
-                立即缴费
+              <button
+                type="button"
+                onClick={handlePay}
+                disabled={submitting}
+                className="bg-white text-primary px-8 py-3 rounded-xl font-bold text-sm active:scale-95 transition-transform"
+              >
+                {submitting ? '处理中...' : '立即缴费'}
               </button>
             </div>
           </div>
         </div>
       </section>
+
+      {message ? (
+        <section className="rounded-lg bg-primary-container/15 px-4 py-3 text-sm font-bold text-primary">
+          {message}
+        </section>
+      ) : null}
 
       {/* Usage Chart */}
       <section className="grid grid-cols-2 gap-4">
@@ -97,11 +169,19 @@ export const ElectricityScreen: React.FC = () => {
                 <p className="text-xs text-on-surface-variant">低于 5 度时自动通知</p>
               </div>
             </div>
-            <div className="w-12 h-6 bg-primary-container rounded-full relative p-1 cursor-pointer">
-              <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
-            </div>
+            <button
+              className={`w-12 h-6 rounded-full relative p-1 cursor-pointer ${utilityData.reminderEnabled ? 'bg-primary-container' : 'bg-surface-container-highest'}`}
+              type="button"
+              onClick={handleReminderToggle}
+            >
+              <div className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${utilityData.reminderEnabled ? 'right-1' : 'left-1'}`}></div>
+            </button>
           </div>
-          <div className="flex items-center justify-between p-5">
+          <button
+            className="flex w-full items-center justify-between p-5 text-left active:scale-[0.99]"
+            type="button"
+            onClick={() => setMessage(`已显示近半年缴费记录：${utilityData.electricityTransactions[0]?.title ?? '电费缴纳'} ${utilityData.electricityTransactions[0]?.amount ?? '+0.00 度'}。`)}
+          >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-secondary-container/30 rounded-full flex items-center justify-center">
                 <History className="w-5 h-5 text-secondary" />
@@ -112,7 +192,7 @@ export const ElectricityScreen: React.FC = () => {
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-on-surface-variant" />
-          </div>
+          </button>
         </div>
       </section>
 
@@ -132,3 +212,17 @@ export const ElectricityScreen: React.FC = () => {
     </div>
   );
 };
+
+function getInitialUtilityData(identity: AuthSession['user']['identity']): UtilityData {
+  return {
+    waterBalance: identity === 'teacher' ? 68 : 42.5,
+    electricityKwh: identity === 'teacher' ? 58 : 36.5,
+    reminderEnabled: true,
+    waterTransactions: [
+      {id: 'water-initial', title: identity === 'teacher' ? '教师公寓热水' : '1号宿舍楼 302室', time: '昨天 19:45', amount: identity === 'teacher' ? '-3.20' : '-2.80'},
+    ],
+    electricityTransactions: [
+      {id: 'electricity-initial', title: '电费缴纳', time: '上月 08:30', amount: '+30.00 度'},
+    ],
+  };
+}

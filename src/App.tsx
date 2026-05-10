@@ -1,199 +1,189 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import React from 'react';
+import {Layout} from './components/Layout';
+import {SplashScreen} from './components/SplashScreen';
+import {IdentitySelectionScreen} from './components/IdentitySelectionScreen';
+import {AdminDashboardScreen} from './components/AdminDashboardScreen';
+import {AppScreenRenderer} from './components/AppScreenRenderer';
+import {AUTH_SESSION_EXPIRED_EVENT, login, logout} from './lib/api';
+import {
+  getActiveTab,
+  getScreenTitle,
+  getSessionEntryScreen,
+  isRootShellScreen,
+  isScreen,
+  isScreenAllowedForSession,
+  normalizeScreenForIdentity,
+} from './lib/routes';
+import {readStoredIdentity, readStoredSession, writeStoredIdentity, writeStoredSession} from './lib/storage';
+import {useScreenRouting} from './lib/useScreenRouting';
+import {useShellData} from './lib/useShellData';
+import type {AuthSession, Identity} from './lib/types';
 
-import React, { useState } from 'react';
-import { Layout } from './components/Layout';
-import { SplashScreen } from './components/SplashScreen';
-import { IdentitySelectionScreen } from './components/IdentitySelectionScreen';
-import { HomeScreen } from './components/HomeScreen';
-import { CourierScreen } from './components/CourierScreen';
-import { WaterRechargeScreen } from './components/WaterRechargeScreen';
-import { TakeoutScreen } from './components/TakeoutScreen';
-import { RepairScreen } from './components/RepairScreen';
-import { LostAndFoundScreen } from './components/LostAndFoundScreen';
-import { ClubsScreen } from './components/ClubsScreen';
-import { NavigationScreen } from './components/NavigationScreen';
-import { ElectricityScreen } from './components/ElectricityScreen';
-import { WalletScreen } from './components/WalletScreen';
-import { CourierCompareScreen } from './components/CourierCompareScreen';
-import { CanteenScreen } from './components/CanteenScreen';
-import { JobsScreen } from './components/JobsScreen';
-import { ServiceCenterScreen } from './components/ServiceCenterScreen';
-import { ProfileScreen } from './components/ProfileScreen';
-import { TeacherHomeScreen } from './components/teacher/TeacherHomeScreen';
-import { TeacherCourierScreen } from './components/teacher/TeacherCourierScreen';
-import { TeacherTakeoutScreen } from './components/teacher/TeacherTakeoutScreen';
-import { TeacherMeetingScreen } from './components/teacher/TeacherMeetingScreen';
-import { TeacherDocumentScreen } from './components/teacher/TeacherDocumentScreen';
-import { TeacherStudentAffairsScreen } from './components/teacher/TeacherStudentAffairsScreen';
-import { TeacherRepairScreen } from './components/teacher/TeacherRepairScreen';
-import { TeacherStudyRoomScreen } from './components/teacher/TeacherStudyRoomScreen';
-import { TeacherLeaveScreen } from './components/teacher/TeacherLeaveScreen';
-import { TeacherSalaryScreen } from './components/teacher/TeacherSalaryScreen';
-import { TeacherCampusCardScreen } from './components/teacher/TeacherCampusCardScreen';
-import { TeacherMessageScreen } from './components/teacher/TeacherMessageScreen';
-import { TeacherOfficeScreen } from './components/teacher/TeacherOfficeScreen';
-import { TeacherProfileScreen } from './components/teacher/TeacherProfileScreen';
-
-type Screen = 
-  | 'splash' 
-  | 'identity' 
-  | 'home' 
-  | 'map' 
-  | 'services' 
-  | 'profile' 
-  | 'courier' 
-  | 'takeout' 
-  | 'repair' 
-  | 'lost-found' 
-  | 'clubs' 
-  | 'water' 
-  | 'electricity' 
-  | 'wallet' 
-  | 'courier-compare' 
-  | 'canteen' 
-  | 'jobs'
-  | 'teacher-courier'
-  | 'teacher-takeout'
-  | 'teacher-meeting'
-  | 'teacher-document'
-  | 'teacher-student-affairs'
-  | 'teacher-repair'
-  | 'teacher-study-room'
-  | 'teacher-leave'
-  | 'teacher-salary'
-  | 'teacher-campus-card'
-  | 'teacher-message'
-  | 'teacher-office'
-  | 'teacher-profile';
+const initialSession = readStoredSession();
+const initialIdentity = initialSession?.user.identity ?? readStoredIdentity() ?? 'student';
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
-  const [identity, setIdentity] = useState<'student' | 'teacher' | null>(null);
+  const [session, setSession] = React.useState<AuthSession | null>(initialSession);
+  const [preferredIdentity, setPreferredIdentity] = React.useState<Identity>(initialIdentity);
+  const [authError, setAuthError] = React.useState('');
+  const [loginLoading, setLoginLoading] = React.useState(false);
+  const activeSessionRef = React.useRef<AuthSession | null>(initialSession);
+  const {currentScreen, commitScreen} = useScreenRouting(session);
+
+  const handleSessionRefresh = React.useCallback((nextSession: AuthSession) => {
+    activeSessionRef.current = nextSession;
+    setSession(nextSession);
+  }, []);
+
+  const handleSessionExpired = React.useCallback(() => {
+    activeSessionRef.current = null;
+    setSession(null);
+    setAuthError('登录已过期，请重新登录。');
+    commitScreen('identity', {replace: true});
+  }, [commitScreen]);
+
+  React.useEffect(() => {
+    activeSessionRef.current = session;
+  }, [session]);
+
+  React.useEffect(() => {
+    const handleApiSessionExpired = () => {
+      if (activeSessionRef.current) {
+        handleSessionExpired();
+      }
+    };
+
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleApiSessionExpired);
+    return () => {
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, handleApiSessionExpired);
+    };
+  }, [handleSessionExpired]);
+
+  const {
+    dataLoading,
+    dataNotice,
+    homeData,
+    courierData,
+    walletData,
+  } = useShellData({
+    session,
+    preferredIdentity,
+    currentScreen,
+    onSessionRefresh: handleSessionRefresh,
+    onSessionExpired: handleSessionExpired,
+  });
+
+  React.useEffect(() => {
+    writeStoredSession(session);
+    if (session) {
+      writeStoredIdentity(session.user.identity);
+      setPreferredIdentity(session.user.identity);
+    }
+  }, [session]);
+
+  const identity = session?.user.identity ?? null;
 
   const handleNavigate = (screen: string) => {
-    setCurrentScreen(screen as Screen);
+    if (!isScreen(screen)) {
+      return;
+    }
+
+    const nextScreen = normalizeScreenForIdentity(screen, identity);
+    if (!isScreenAllowedForSession(nextScreen, session)) {
+      return;
+    }
+
+    commitScreen(nextScreen);
   };
 
   const handleBack = () => {
-    // Basic back logic
-    const subScreens = [
-      'courier', 'takeout', 'repair', 'lost-found', 'clubs', 'water', 'electricity', 'wallet', 'courier-compare', 'canteen', 'jobs',
-      'teacher-courier', 'teacher-takeout', 'teacher-meeting', 'teacher-document', 'teacher-student-affairs', 'teacher-repair', 'teacher-study-room', 'teacher-leave', 'teacher-salary', 'teacher-campus-card'
-    ];
-    if (subScreens.includes(currentScreen)) {
-      setCurrentScreen('home');
-    } else {
-      setCurrentScreen('home');
+    commitScreen('home');
+  };
+
+  const handleLogin = async (nextIdentity: Identity, username: string, password: string) => {
+    setLoginLoading(true);
+    setAuthError('');
+    setPreferredIdentity(nextIdentity);
+    writeStoredIdentity(nextIdentity);
+
+    try {
+      const nextSession = await login(nextIdentity, username, password);
+      activeSessionRef.current = nextSession;
+      setSession(nextSession);
+      commitScreen(nextSession.user.role === 'admin' ? 'admin-dashboard' : 'home', {replace: true});
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : '登录失败，请稍后重试。');
+    } finally {
+      setLoginLoading(false);
     }
   };
 
-  if (currentScreen === 'splash') {
-    return <SplashScreen onComplete={() => setCurrentScreen('identity')} />;
-  }
+  const handleLogout = async () => {
+    if (session) {
+      setPreferredIdentity(session.user.identity);
+      writeStoredIdentity(session.user.identity);
+    }
+    await logout(session);
+    activeSessionRef.current = null;
+    setSession(null);
+    setAuthError('');
+    commitScreen('identity', {replace: true});
+  };
 
-  if (currentScreen === 'identity') {
+  if (currentScreen === 'splash') {
     return (
-      <IdentitySelectionScreen 
-        onSelect={(id) => {
-          setIdentity(id);
-          setCurrentScreen('home');
-        }} 
+      <SplashScreen
+        onComplete={() => commitScreen(getSessionEntryScreen(session), {replace: true})}
       />
     );
   }
 
-  const getTitle = () => {
-    switch (currentScreen) {
-      case 'home': return '校园宝';
-      case 'map': return '校园导航';
-      case 'services': return '服务中心';
-      case 'profile': return '个人中心';
-      case 'courier': return '取快递';
-      case 'takeout': return '外卖代取';
-      case 'repair': return '校园报修';
-      case 'lost-found': return '失物招领';
-      case 'clubs': return '社团资讯';
-      case 'water': return '热水充值';
-      case 'electricity': return '电费查询';
-      case 'wallet': return '校园卡充值';
-      case 'courier-compare': return '快递比价';
-      case 'canteen': return '食堂优惠';
-      case 'jobs': return '兼职信息';
-      case 'teacher-courier': return '快递代取';
-      case 'teacher-takeout': return '外卖代取';
-      case 'teacher-meeting': return '会议室预约';
-      case 'teacher-document': return '文件代送';
-      case 'teacher-student-affairs': return '学生事务';
-      case 'teacher-repair': return '校园报修';
-      case 'teacher-study-room': return '研讨室管理';
-      case 'teacher-leave': return '请假审批';
-      case 'teacher-salary': return '工资查询';
-      case 'teacher-campus-card': return '校园卡';
-      case 'teacher-message': return '消息';
-      case 'teacher-office': return '办公中心';
-      case 'teacher-profile': return '个人中心';
-      default: return '校园宝';
-    }
-  };
+  if (!session || currentScreen === 'identity') {
+    return (
+      <IdentitySelectionScreen
+        defaultIdentity={identity ?? preferredIdentity}
+        loading={loginLoading}
+        error={authError}
+        onLogin={handleLogin}
+      />
+    );
+  }
 
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'home': 
-        return identity === 'teacher' 
-          ? <TeacherHomeScreen onNavigate={handleNavigate} /> 
-          : <HomeScreen onNavigate={handleNavigate} />;
-      case 'map': return <NavigationScreen />;
-      case 'services': 
-        return identity === 'teacher'
-          ? <TeacherOfficeScreen onNavigate={handleNavigate} />
-          : <ServiceCenterScreen onNavigate={handleNavigate} />;
-      case 'profile': 
-        return identity === 'teacher'
-          ? <TeacherProfileScreen />
-          : <ProfileScreen onNavigate={handleNavigate} />;
-      case 'courier': return <CourierScreen />;
-      case 'takeout': return <TakeoutScreen />;
-      case 'repair': return <RepairScreen />;
-      case 'lost-found': return <LostAndFoundScreen />;
-      case 'clubs': return <ClubsScreen />;
-      case 'water': return <WaterRechargeScreen />;
-      case 'electricity': return <ElectricityScreen />;
-      case 'wallet': return <WalletScreen />;
-      case 'courier-compare': return <CourierCompareScreen />;
-      case 'canteen': return <CanteenScreen />;
-      case 'jobs': return <JobsScreen />;
-      case 'teacher-courier': return <TeacherCourierScreen />;
-      case 'teacher-takeout': return <TeacherTakeoutScreen />;
-      case 'teacher-meeting': return <TeacherMeetingScreen />;
-      case 'teacher-document': return <TeacherDocumentScreen />;
-      case 'teacher-student-affairs': return <TeacherStudentAffairsScreen />;
-      case 'teacher-repair': return <TeacherRepairScreen />;
-      case 'teacher-study-room': return <TeacherStudyRoomScreen />;
-      case 'teacher-leave': return <TeacherLeaveScreen />;
-      case 'teacher-salary': return <TeacherSalaryScreen />;
-      case 'teacher-campus-card': return <TeacherCampusCardScreen />;
-      default: return identity === 'teacher' 
-        ? <TeacherHomeScreen onNavigate={handleNavigate} /> 
-        : <HomeScreen onNavigate={handleNavigate} />;
-    }
-  };
+  if (session.user.role === 'admin') {
+    return (
+      <AdminDashboardScreen
+        session={session}
+        onLogout={handleLogout}
+        onSessionExpired={handleSessionExpired}
+      />
+    );
+  }
 
-  const activeTab = ['home', 'map', 'services', 'profile'].includes(currentScreen) ? currentScreen : 'home';
+  const headerTitle = getScreenTitle(currentScreen, identity);
+
+  const activeTab = getActiveTab(currentScreen);
 
   return (
-    <Layout 
-      title={getTitle()} 
-      activeTab={activeTab} 
+    <Layout
+      title={headerTitle}
+      activeTab={activeTab}
       setActiveTab={handleNavigate}
       onBack={handleBack}
-      showBack={!['home', 'map', 'services', 'profile'].includes(currentScreen)}
+      showBack={!isRootShellScreen(currentScreen, identity)}
       identity={identity}
     >
-      {renderScreen()}
+      <AppScreenRenderer
+        currentScreen={currentScreen}
+        identity={identity}
+        session={session}
+        homeData={homeData}
+        courierData={courierData}
+        walletData={walletData}
+        dataLoading={dataLoading}
+        dataNotice={dataNotice}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
+      />
     </Layout>
   );
 }
-

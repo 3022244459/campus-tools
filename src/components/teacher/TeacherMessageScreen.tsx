@@ -9,10 +9,16 @@ import {
   School,
   ChevronRight
 } from 'lucide-react';
+import {IntegrationPendingNote} from '../IntegrationPendingNote';
 
 export const TeacherMessageScreen: React.FC = () => {
+  const [filter, setFilter] = React.useState('全部');
+  const [message, setMessage] = React.useState('');
+
   return (
     <div className="space-y-6 pt-4 pb-20">
+      <IntegrationPendingNote />
+
       {/* Search Section */}
       <div className="relative">
         <div className="flex items-center bg-surface-container-highest rounded-xl px-4 py-3 gap-3 shadow-sm border-none">
@@ -27,16 +33,35 @@ export const TeacherMessageScreen: React.FC = () => {
 
       {/* Quick Filters */}
       <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-        <button className="bg-primary-container text-black px-6 py-2 rounded-full font-bold whitespace-nowrap active:scale-95 transition-transform shadow-sm">全部</button>
-        <button className="bg-secondary-container text-on-secondary-fixed px-6 py-2 rounded-full font-semibold whitespace-nowrap active:scale-95 transition-transform">学生</button>
-        <button className="bg-secondary-container text-on-secondary-fixed px-6 py-2 rounded-full font-semibold whitespace-nowrap active:scale-95 transition-transform">同事</button>
-        <button className="bg-secondary-container text-on-secondary-fixed px-6 py-2 rounded-full font-semibold whitespace-nowrap active:scale-95 transition-transform">家长群</button>
+        {['全部', '学生', '同事', '家长群'].map((item) => (
+          <button
+            key={item}
+            className={`px-6 py-2 rounded-full whitespace-nowrap active:scale-95 transition-transform ${
+              filter === item ? 'bg-primary-container text-black font-bold shadow-sm' : 'bg-secondary-container text-on-secondary-fixed font-semibold'
+            }`}
+            type="button"
+            onClick={() => {
+              setFilter(item);
+              setMessage(`已筛选：${item}`);
+            }}
+          >
+            {item}
+          </button>
+        ))}
       </div>
+
+      {message ? (
+        <section className="rounded-lg bg-primary-container/15 px-4 py-3 text-sm font-bold text-primary">{message}</section>
+      ) : null}
 
       {/* Chat List */}
       <div className="grid grid-cols-1 gap-4">
         {/* Pinned Chat */}
-        <div className="bg-surface-container-lowest p-5 rounded-lg flex items-center gap-4 relative overflow-hidden group hover:bg-surface-container transition-colors cursor-pointer shadow-sm border border-outline-variant/5">
+        <button
+          className="bg-surface-container-lowest p-5 rounded-lg flex items-center gap-4 text-left relative overflow-hidden group hover:bg-surface-container transition-colors cursor-pointer shadow-sm border border-outline-variant/5"
+          type="button"
+          onClick={() => setMessage('已打开高一(3)班家长交流群。')}
+        >
           <div className="absolute top-0 right-0 p-1">
             <Pin className="w-3 h-3 text-primary-container fill-primary-container" />
           </div>
@@ -60,10 +85,14 @@ export const TeacherMessageScreen: React.FC = () => {
             </div>
             <p className="text-on-surface-variant text-sm truncate">李晓明的家长：老师，下周的校服订购是在哪...</p>
           </div>
-        </div>
+        </button>
 
         {/* Regular Chat 1 */}
-        <div className="bg-surface-container-low p-5 rounded-lg flex items-center gap-4 group hover:bg-surface-container transition-colors cursor-pointer border border-outline-variant/5">
+        <button
+          className="bg-surface-container-low p-5 rounded-lg flex items-center gap-4 text-left group hover:bg-surface-container transition-colors cursor-pointer border border-outline-variant/5"
+          type="button"
+          onClick={() => setMessage('已打开张子涵的聊天窗口。')}
+        >
           <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-sm">
             <img 
               src="./images/remote-34-21e6b502a1.png" 
@@ -79,10 +108,14 @@ export const TeacherMessageScreen: React.FC = () => {
             </div>
             <p className="text-on-surface-variant text-sm truncate">好的老师，我会准时提交作业的。谢谢您！</p>
           </div>
-        </div>
+        </button>
 
         {/* Regular Chat 2 */}
-        <div className="bg-surface-container-lowest p-5 rounded-lg flex items-center gap-4 group hover:bg-surface-container transition-colors cursor-pointer shadow-sm border border-outline-variant/5">
+        <button
+          className="bg-surface-container-lowest p-5 rounded-lg flex items-center gap-4 text-left group hover:bg-surface-container transition-colors cursor-pointer shadow-sm border border-outline-variant/5"
+          type="button"
+          onClick={() => setMessage('已打开王建国的聊天窗口。')}
+        >
           <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-sm">
             <img 
               src="./images/remote-35-83a9a0934a.png" 
@@ -98,7 +131,7 @@ export const TeacherMessageScreen: React.FC = () => {
             </div>
             <p className="text-primary font-medium text-sm truncate">[图片] 教务处最新通知</p>
           </div>
-        </div>
+        </button>
 
         {/* Campus Pulse Card */}
         <div className="relative bg-secondary-fixed-dim p-6 rounded-lg overflow-hidden flex flex-col justify-end min-h-[160px] shadow-lg border border-secondary-fixed-dim/30">
@@ -110,7 +143,7 @@ export const TeacherMessageScreen: React.FC = () => {
               <Megaphone className="w-4 h-4 text-on-secondary-fixed fill-on-secondary-fixed" />
               <span className="font-bold text-on-secondary-fixed text-sm uppercase tracking-wider">校园动态</span>
             </div>
-            <h2 className="text-2xl font-black text-on-secondary-fixed leading-tight mb-4">全校教师大会：<br/>下周一卧龙礼堂举行</h2>
+            <h2 className="text-2xl font-black text-on-secondary-fixed leading-tight mb-4">全校教师大会：<br/>下周一北洋园礼堂举行</h2>
             <div className="flex items-center gap-2">
               <span className="bg-on-secondary-fixed text-secondary-fixed-dim px-3 py-1 rounded-full text-xs font-bold">置顶公告</span>
               <span className="text-on-secondary-fixed/70 text-xs font-medium">10分钟前</span>
@@ -119,7 +152,11 @@ export const TeacherMessageScreen: React.FC = () => {
         </div>
 
         {/* Regular Chat 3 */}
-        <div className="bg-surface-container-low p-5 rounded-lg flex items-center gap-4 group hover:bg-surface-container transition-colors cursor-pointer border border-outline-variant/5">
+        <button
+          className="bg-surface-container-low p-5 rounded-lg flex items-center gap-4 text-left group hover:bg-surface-container transition-colors cursor-pointer border border-outline-variant/5"
+          type="button"
+          onClick={() => setMessage('已打开系统通知。')}
+        >
           <div className="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center shadow-sm">
             <School className="w-8 h-8 text-primary fill-primary/20" />
           </div>
@@ -130,11 +167,16 @@ export const TeacherMessageScreen: React.FC = () => {
             </div>
             <p className="text-on-surface-variant text-sm truncate">您的绩效自评报告已进入审核阶段，请留意...</p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* FAB for New Message */}
-      <button className="fixed bottom-32 right-6 w-16 h-16 bg-primary-fixed text-black rounded-full flex items-center justify-center shadow-2xl z-40 active:scale-90 transition-transform">
+      <button
+        type="button"
+        onClick={() => setMessage('已打开新消息编辑窗口。')}
+        aria-label="新建消息"
+        className="fixed bottom-32 right-6 w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl z-40 active:scale-95 transition-transform"
+      >
         <MessageSquarePlus className="w-8 h-8" />
       </button>
     </div>

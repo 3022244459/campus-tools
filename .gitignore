@@ -6,3 +6,11 @@ coverage/
 *.log
 .env*
 !.env.example
+!.env.pilot.example
+server/logs/*
+!server/logs/.gitkeep
+server/data/*.sqlite
+server/data/*.sqlite-shm
+server/data/*.sqlite-wal
+server/backups/*
+!server/backups/.gitkeep
